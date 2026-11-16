@@ -1,0 +1,291 @@
+// The Ark Victory Church - ark-web (v1) database schema.
+// Table names follow the ChurchOS (v2) naming so v2 can extend rather than migrate.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Staff / admin
+// ---------------------------------------------------------------------------
+
+enum AdminRole {
+  ADMIN // everything, incl. user management
+  EDITOR // content, events, inboxes
+}
+
+model AdminUser {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  name         String
+  passwordHash String
+  role         AdminRole  @default(EDITOR)
+  active       Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  auditLogs    AuditLog[]
+
+  @@map("admin_user")
+}
+
+model AuditLog {
+  id        String     @id @default(uuid()) @db.Uuid
+  actorId   String?    @db.Uuid
+  actor     AdminUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String // e.g. "event.update"
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime   @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+// ---------------------------------------------------------------------------
+// Worship services (Sunday services, fellowships, monthly gatherings)
+// ---------------------------------------------------------------------------
+
+enum ServiceCategory {
+  SUNDAY // main Sunday services
+  FELLOWSHIP // language fellowships (Hindi, Telugu, International)
+  CHILDREN // Victory Kids, Tweens
+  MONTHLY // Dawn service, Night prayer, ...
+}
+
+enum Recurrence {
+  WEEKLY
+  MONTHLY_NTH // nth <dayOfWeek> of the month; nthWeek = -1 means "last"
+}
+
+model Service {
+  id          String          @id @default(uuid()) @db.Uuid
+  slug        String          @unique
+  name        String
+  subtitle    String?
+  description String?
+  category    ServiceCategory
+  language    String?
+  dayOfWeek   Int // 0 = Sunday ... 6 = Saturday
+  recurrence  Recurrence      @default(WEEKLY)
+  nthWeek     Int? // 1..5 or -1 (last); only for MONTHLY_NTH
+  startTime   String? // "HH:mm" 24h, Asia/Kolkata. null = time to be announced
+  endTime     String?
+  venue       String?
+  livestream  Boolean         @default(false)
+  sortOrder   Int             @default(0)
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([active, category, sortOrder])
+  @@map("service")
+}
+
+// ---------------------------------------------------------------------------
+// Events & registrations
+// ---------------------------------------------------------------------------
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+model Event {
+  id                   String         @id @default(uuid()) @db.Uuid
+  slug                 String         @unique
+  title                String
+  summary              String
+  description          String
+  ministrySlug         String?
+  imageUrl             String?
+  venue                String
+  startsAt             DateTime
+  endsAt               DateTime?
+  status               EventStatus    @default(DRAFT)
+  registrationEnabled  Boolean        @default(true)
+  registrationClosesAt DateTime?
+  capacity             Int? // null = unlimited
+  waitlistEnabled      Boolean        @default(true)
+  maxSeatsPerBooking   Int            @default(5)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  registrations        Registration[]
+
+  @@index([status, startsAt])
+  @@map("event")
+}
+
+enum RegistrationStatus {
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+}
+
+model Registration {
+  id              String             @id @default(uuid()) @db.Uuid
+  refCode         String             @unique
+  eventId         String             @db.Uuid
+  event           Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name            String
+  email           String
+  phone           String
+  seats           Int                @default(1)
+  notes           String?
+  status          RegistrationStatus
+  manageTokenHash String             @unique
+  consentAt       DateTime
+  checkedInAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([eventId, status, createdAt])
+  @@index([eventId, email])
+  @@map("registration")
+}
+
+// ---------------------------------------------------------------------------
+// Enquiries (contact form, prayer requests) & volunteer applications
+// ---------------------------------------------------------------------------
+
+enum EnquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+model Enquiry {
+  id              String        @id @default(uuid()) @db.Uuid
+  name            String
+  email           String
+  phone           String?
+  purpose         String
+  message         String
+  isPrayerRequest Boolean       @default(false)
+  contactOk       Boolean       @default(true)
+  status          EnquiryStatus @default(NEW)
+  adminNotes      String?
+  consentAt       DateTime
+  resolvedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@map("enquiry")
+}
+
+enum VolunteerStatus {
+  SUBMITTED
+  ON_HOLD
+  APPROVED
+  DECLINED
+}
+
+model VolunteerApplication {
+  id             String          @id @default(uuid()) @db.Uuid
+  name           String
+  email          String
+  phone          String
+  teams          String[]
+  availability   String[]
+  attendingSince String?
+  experience     String?
+  message        String?
+  status         VolunteerStatus @default(SUBMITTED)
+  adminNotes     String?
+  consentAt      DateTime
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status, createdAt])
+  @@map("volunteer_application")
+}
+
+// ---------------------------------------------------------------------------
+// Announcements (home-page banner)
+// ---------------------------------------------------------------------------
+
+model Announcement {
+  id        String    @id @default(uuid()) @db.Uuid
+  title     String
+  body      String?
+  linkUrl   String?
+  linkLabel String?
+  startsAt  DateTime  @default(now())
+  endsAt    DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([active, startsAt])
+  @@map("announcement")
+}
+
+// ---------------------------------------------------------------------------
+// Rate limiting (DB-backed so it works across multiple app instances)
+// ---------------------------------------------------------------------------
+
+model RateLimitHit {
+  key       String
+  windowEnd DateTime
+  count     Int      @default(1)
+
+  @@id([key, windowEnd])
+  @@index([windowEnd])
+  @@map("rate_limit_hit")
+}
+
+// ---------------------------------------------------------------------------
+// Editable page content (admin → Content). Defaults live in src/content/*.ts;
+// a row here overrides the default for that section.
+// ---------------------------------------------------------------------------
+
+model ContentBlock {
+  key         String   @id // e.g. "home", "about", "ministries"
+  value       Json
+  updatedById String?  @db.Uuid
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("content_block")
+}
+
+model ContentRevision {
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String
+  value         Json // the value that was REPLACED (so it can be restored)
+  createdById   String?  @db.Uuid
+  createdByName String?
+  note          String?
+  createdAt     DateTime @default(now())
+
+  @@index([key, createdAt])
+  @@map("content_revision")
+}
+
+// Uploaded images (stored in Postgres so the app works on any host, incl. serverless).
+model Media {
+  id           String   @id @default(uuid()) @db.Uuid
+  filename     String
+  mimeType     String
+  width        Int
+  height       Int
+  sizeBytes    Int
+  data         Bytes
+  alt          String?
+  uploadedById String?  @db.Uuid
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("media")
+}
