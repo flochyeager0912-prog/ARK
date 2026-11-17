@@ -3,6 +3,7 @@ import { InstallButton } from "@/components/pwa/install-button";
 import { IconFacebook, IconInstagram, IconMail, IconPhone, IconPin, IconYouTube } from "@/components/ui/icons";
 import { footerNav } from "@/content/site";
 import { getSite } from "@/server/content";
+import { EmailText } from "@/components/ui/section";
 import { BackToTop } from "./back-to-top";
 
 export async function SiteFooter() {
@@ -51,7 +52,7 @@ export async function SiteFooter() {
             </li>
             <li className="flex gap-3">
               <IconMail size={17} className="mt-0.5 shrink-0 text-glow-blue" />
-              <a href={`mailto:${site.contact.email}`} className="break-all hover:text-white">{site.contact.email}</a>
+              <a href={`mailto:${site.contact.email}`} className="break-words hover:text-white"><EmailText email={site.contact.email} /></a>
             </li>
             <li className="flex gap-3">
               <IconPin size={17} className="mt-0.5 shrink-0 text-glow-blue" />

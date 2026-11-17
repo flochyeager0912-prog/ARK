@@ -8,7 +8,7 @@
  *    service times, events and contact details remain readable offline.
  *  - Never cached: /admin, /api, /booking (personal), POSTs/server actions, RSC payloads.
  */
-const VERSION = "v1";
+const VERSION = "v2"; // bump when the look changes so installed apps drop stale offline copies
 const SHELL = `ark-shell-${VERSION}`;
 const PAGES = `ark-pages-${VERSION}`;
 const STATIC = `ark-static-${VERSION}`;

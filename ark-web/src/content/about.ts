@@ -126,7 +126,7 @@ export const journey: Milestone[] = [
     body: [
       "The Ark Ministry began with a small group of believers gathering in faith and prayer, sowing the seeds for what would later grow into a thriving church community.",
     ],
-    image: { src: "/images/journey-1999.webp", alt: "Illustration of an ancient stone wall, recalling the book of Nehemiah" },
+    image: { src: "/images/journey-1999-clean.webp", alt: "Illustration of an ancient stone wall, recalling the book of Nehemiah" },
   },
   {
     year: "2000–2003",
@@ -143,7 +143,7 @@ export const journey: Milestone[] = [
       "January 2004: Church restarted with 5 people at Caspa Hall, under a fresh mandate from the Lord inspired by the book of Nehemiah.",
       "Vision of Rakshak — God gave the vision of Rakshak. It began under a tree with 20 children learning spoken English — with a cup of Boost and biscuits. Today, Rakshak has impacted over 3,000 children, producing teachers, professionals, and leaders.",
     ],
-    image: { src: "/images/journey-rakshak.webp", alt: "Rakshak children learning together in the early days" },
+    image: { src: "/images/journey-rakshak-clean.webp", alt: "Rakshak children learning together in the early days" },
   },
   {
     year: "2006",
@@ -167,7 +167,7 @@ export const journey: Milestone[] = [
     year: "October 2015",
     title: "The Ark Victory Church building dedicated",
     body: ["The new Ark Victory Church building at Sembakkam was dedicated."],
-    image: { src: "/images/journey-building-2015.webp", alt: "The Ark Victory Church building at Sembakkam" },
+    image: { src: "/images/building-fund.webp", alt: "The Ark Victory Church building at Sembakkam" },
   },
   {
     year: "2020",

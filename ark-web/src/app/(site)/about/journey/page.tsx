@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { Photo } from "@/components/ui/photo";
 import Link from "next/link";
 import { PageHero, Section } from "@/components/ui/section";
 import { getSection } from "@/server/content";
@@ -48,11 +48,7 @@ export default async function JourneyPage() {
                     {m.body.map((p, i) => <p key={i}>{p}</p>)}
                   </div>
                 </div>
-                {m.image && (
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-white/5">
-                    <Image src={m.image.src} alt={m.image.alt} fill sizes="(min-width:768px) 280px, 100vw" className="object-cover" />
-                  </div>
-                )}
+                {m.image && <Photo src={m.image.src} alt={m.image.alt} ratio="4/3" fit="contain" className="rounded-xl" sizes="(min-width:768px) 280px, 100vw" />}
               </article>
             </Reveal>
           ))}

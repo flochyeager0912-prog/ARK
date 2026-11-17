@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHero, Section } from "@/components/ui/section";
+import { EmailText, PageHero, Section } from "@/components/ui/section";
 import { ContactForm } from "@/components/forms/contact-form";
 import { IconMail, IconPhone, IconPin, IconWhatsApp } from "@/components/ui/icons";
 import { mapsDirectionsUrl, mapsEmbedUrl } from "@/content/site";
@@ -34,8 +34,8 @@ export default async function ContactPage({ searchParams }: Props) {
       Icon: IconMail,
       body: (
         <>
-          <a href={`mailto:${site.contact.email}`} className="block break-all font-semibold text-white hover:text-accent">{site.contact.email}</a>
-          {site.contact.secondaryEmail && <a href={`mailto:${site.contact.secondaryEmail}`} className="block break-all text-sm text-muted hover:text-white">{site.contact.secondaryEmail}</a>}
+          <a href={`mailto:${site.contact.email}`} className="block break-words font-semibold text-white hover:text-accent"><EmailText email={site.contact.email} /></a>
+          {site.contact.secondaryEmail && <a href={`mailto:${site.contact.secondaryEmail}`} className="block break-words text-sm text-muted hover:text-white"><EmailText email={site.contact.secondaryEmail} /></a>}
         </>
       ),
     },

@@ -8,7 +8,7 @@ import { ministryGroups } from "@/content/ministries";
 import { mapsDirectionsUrl, type SiteContent } from "@/content/site";
 import { formatLongDate, formatTime, relativeDay } from "@/lib/time";
 import { safeHref, slugify } from "@/lib/utils";
-import { Flow, Meta, NumberedTile, Section, SectionHeading } from "@/components/ui/section";
+import { EmailText, Flow, Meta, NumberedTile, Section, SectionHeading } from "@/components/ui/section";
 import { Photo } from "@/components/ui/photo";
 import { Tabs } from "@/components/ui/tabs";
 import { ServiceCard } from "@/components/site/service-list";
@@ -34,7 +34,7 @@ export function Hero({
       <div className="panel stagger w-full max-w-[42rem] p-7 sm:p-10 lg:p-12">
         <span aria-hidden className="absolute -top-3 left-6 h-1.5 w-2/5 rounded-full bg-gradient-to-r from-glow-blue/50 to-glow-blue/0" />
         <p className="eyebrow">{site.denomination} · {site.address.locality}, {site.address.city}</p>
-        <h1 className="text-gradient mt-5 pb-2 font-display text-[3.1rem] font-medium leading-[0.98] tracking-[-0.03em] sm:text-7xl lg:text-[4.9rem]">
+        <h1 className="text-gradient mt-5 pb-2 font-display text-[2.7rem] font-medium leading-[1.02] min-[400px]:text-[3rem] tracking-[-0.03em] sm:text-7xl lg:text-[4.9rem]">
           {home.whereChurchIsFamily.title}
         </h1>
         <p className="mt-4 text-xl font-semibold text-white sm:text-2xl">{site.name}</p>
@@ -109,16 +109,14 @@ export function About({ home, about }: { home: Sections["home"]; about: Sections
             {welcome.body.map((p, i) => <p key={i}>{p}</p>)}
           </div>
         </div>
-        <article className="tile overflow-hidden">
+        <article className="tile self-start overflow-hidden">
           <Photo src={pastors.image} alt={`${pastors.names}, senior pastors of ${anniversary.eyebrow}`} ratio="4/3" className="rounded-none border-0 border-b" sizes="(min-width:1024px) 40vw, 100vw" />
           <div className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="eyebrow">{pastors.eyebrow}</p>
-                <p className="mt-3 font-display text-2xl font-medium text-white">{pastors.names}</p>
-              </div>
-              <span className="chip shrink-0">{pastors.title}</span>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <p className="eyebrow">{pastors.eyebrow}</p>
+              <span className="chip">{pastors.title}</span>
             </div>
+            <p className="mt-3 font-display text-2xl font-medium text-balance text-white">{pastors.names}</p>
             <blockquote className="mt-4 border-l border-glow-gold/50 pl-4 font-display text-lg italic leading-snug text-ink/85">“{pastors.quote}”</blockquote>
             <p className="mt-4 text-sm font-semibold text-white">{pastors.tagline}</p>
             <p className="text-sm text-muted">{pastors.subTagline}</p>
@@ -166,7 +164,7 @@ export function Journey({ journey }: { journey: Sections["journey"] }) {
           hint: m.title,
           panel: (
             <article className="tile overflow-hidden">
-              {m.image && <Photo src={m.image.src} alt={m.image.alt} ratio="16/9" className="rounded-none border-0 border-b" sizes="(min-width:1024px) 40vw, 100vw" />}
+              {m.image && <Photo src={m.image.src} alt={m.image.alt} ratio="16/9" fit="contain" className="rounded-none border-0 border-b" sizes="(min-width:1024px) 40vw, 100vw" />}
               <div className="p-6">
                 <p className="font-mono text-sm text-glow-gold">{m.year}</p>
                 <h3 className="mt-1 text-xl text-white">{m.title}</h3>
@@ -257,21 +255,23 @@ export function Services({ site, services, intro }: { site: SiteContent; service
 
 /* ------------------------------------------------------------- ministries */
 
+/**
+ * Ministry card. A subgrid of its parent grid, so the label, title, summary and links of cards
+ * sitting side by side line up exactly even when one label or title wraps to two lines.
+ */
 export function MinistryCard({ m }: { m: Ministry }) {
   return (
-    <Link href={`/ministries/${m.slug}`} className="tile-link group flex h-full flex-col overflow-hidden">
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-line">
+    <Link href={`/ministries/${m.slug}`} className="tile-link group row-span-6 grid grid-rows-subgrid gap-0 overflow-hidden">
+      <div className="relative aspect-[16/9] overflow-hidden border-b border-line">
         <Image src={m.image.src} alt={m.image.alt} fill sizes="(min-width:1024px) 30vw, (min-width:640px) 50vw, 100vw" className="object-cover transition-transform duration-700 ease-(--ease-out-soft) group-hover:scale-[1.04]" />
       </div>
-      <div className="flex flex-1 flex-col p-5">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">{m.ageRange ?? m.tagline}</p>
-        <h3 className="mt-2 text-lg text-white">{m.name}</h3>
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{m.summary}</p>
-        {m.schedule && <p className="mt-4 text-xs text-ink/75">{m.schedule}</p>}
-        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
-          Explore <IconArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
-        </span>
-      </div>
+      <p className="px-5 pt-5 font-mono text-[11px] uppercase leading-relaxed tracking-[0.16em] text-accent">{m.ageRange ?? m.tagline}</p>
+      <h3 className="mt-1.5 px-5 text-lg text-white">{m.name}</h3>
+      <p className="mt-2 px-5 text-sm leading-relaxed text-muted">{m.summary}</p>
+      <p className="px-5 pt-4 text-xs text-ink/75 empty:pt-0">{m.schedule}</p>
+      <span className="inline-flex items-center gap-1 px-5 pb-5 pt-4 text-sm font-semibold text-accent">
+        Explore <IconArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
+      </span>
     </Link>
   );
 }
@@ -334,18 +334,16 @@ export function GetInvolved({ site, getInvolved, giving, hasRakshak }: { site: S
       <SectionHeading eyebrow="Reach out in faith" title={getInvolved.title} lead={getInvolved.intro} action={<Link href="/get-involved" className="btn-outline">Ways to serve</Link>} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {getInvolved.cards.map((c, i) => (
-          <Link key={`${i}-${c.key}`} href={c.cta.href} className="tile-link group flex flex-col overflow-hidden">
-            <div className="relative aspect-[4/3] overflow-hidden border-b border-line">
+          <Link key={`${i}-${c.key}`} href={c.cta.href} className="tile-link group row-span-5 grid grid-rows-subgrid gap-0 overflow-hidden">
+            <div className="relative aspect-[16/10] overflow-hidden border-b border-line">
               <Image src={c.image.src} alt={c.image.alt} fill sizes="(min-width:1024px) 22vw, (min-width:640px) 45vw, 100vw" className="object-cover transition-transform duration-700 ease-(--ease-out-soft) group-hover:scale-[1.04]" />
             </div>
-            <div className="flex flex-1 flex-col p-5">
-              <p className="num">{String(c.number).padStart(2, "0")} · {c.subtitle ?? "Serve"}</p>
-              <h3 className="mt-2 text-lg text-white">{c.title}</h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{c.body}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
-                {c.cta.label} <IconArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
-              </span>
-            </div>
+            <p className="num px-5 pt-5 leading-relaxed">{String(c.number).padStart(2, "0")} · {c.subtitle ?? "Serve"}</p>
+            <h3 className="mt-1.5 px-5 text-lg text-white">{c.title}</h3>
+            <p className="mt-2 px-5 text-sm leading-relaxed text-muted">{c.body}</p>
+            <span className="inline-flex items-center gap-1 px-5 pb-5 pt-4 text-sm font-semibold text-accent">
+              {c.cta.label} <IconArrowRight size={15} className="transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
           </Link>
         ))}
       </div>
@@ -358,7 +356,7 @@ export function GetInvolved({ site, getInvolved, giving, hasRakshak }: { site: S
           <div>
             <p className="eyebrow">{giving.eyebrow}</p>
             <h3 className="mt-3 font-display text-2xl font-medium text-white">{giving.title}</h3>
-            <p className="mt-2 text-sm text-muted">{giving.headline}. “{giving.subline}.” <span className="font-mono text-xs text-accent">{giving.verseRef}</span></p>
+            <p className="mt-2 text-sm text-muted">{giving.headline}. “{giving.subline}.” <span className="whitespace-nowrap font-mono text-xs text-accent">{giving.verseRef}</span></p>
             <Link href="/give" className="btn-primary mt-5 px-5 py-2.5">Give online</Link>
           </div>
         </div>
@@ -393,16 +391,18 @@ export function Contact({ site, contact }: { site: SiteContent; contact: Section
   return (
     <Section id="contact">
       <SectionHeading eyebrow={contact.newToArk.eyebrow} title={contact.newToArk.title} lead={contact.newToArk.body} />
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Two wide columns up to xl; on xl the icon sits above the text and the email column is wider,
+          so every value stays on one line. */}
+      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1.15fr)]">
         {channels.map(({ label, value, href, Icon, external }) => (
           <li key={label} className="min-w-0">
-            <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="tile-link group flex h-full items-start gap-4 p-5">
+            <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="tile-link group flex h-full items-start gap-4 p-5 xl:flex-col xl:gap-4">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-glow-blue transition-colors group-hover:border-glow-blue/40">
                 <Icon size={18} />
               </span>
               <span className="min-w-0">
                 <span className="block font-mono text-[10px] uppercase tracking-[0.22em] text-muted">{label}</span>
-                <span className="mt-1.5 block font-semibold text-white [overflow-wrap:anywhere]">{value}</span>
+                <span className="mt-1.5 block break-words font-semibold text-white">{label === "Email" ? <EmailText email={value} /> : value}</span>
               </span>
             </a>
           </li>
@@ -410,24 +410,25 @@ export function Contact({ site, contact }: { site: SiteContent; contact: Section
       </ul>
       <p className="mt-4 text-sm text-muted">{site.address.full}</p>
 
-      <div className="mt-10 grid gap-8 border-t border-line pt-10 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <p className="text-ink">Find your place:</p>
-          <ul className="mt-4 grid gap-3 md:grid-cols-3">
-            {contact.pillars.map((p, i) => (
-              <li key={`${i}-${p.title}`}>
-                <Link href={p.href} className="tile-link block h-full p-5">
-                  <h3 className="text-[17px] text-white">{p.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{p.body}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <div className="mt-10 border-t border-line pt-10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="text-lg text-ink">Find your place</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/contact#form" className="btn-primary">Send us a message</Link>
+            <Link href="/contact?purpose=prayer-request#form" className="btn-outline">Prayer request</Link>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3 lg:flex-col">
-          <Link href="/contact#form" className="btn-primary">Send us a message</Link>
-          <Link href="/contact?purpose=prayer-request#form" className="btn-outline">Prayer request</Link>
-        </div>
+        <ul className="mt-6 grid gap-3 md:grid-cols-3">
+          {contact.pillars.map((p, i) => (
+            <li key={`${i}-${p.title}`}>
+              <Link href={p.href} className="tile-link group flex h-full flex-col p-5">
+                <h3 className="text-[17px] text-white">{p.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{p.body}</p>
+                <IconArrowRight size={16} className="mt-4 text-accent transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </Section>
   );

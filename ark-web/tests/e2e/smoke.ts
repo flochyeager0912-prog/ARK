@@ -151,7 +151,7 @@ async function main() {
   let bookingUrl = "";
   await step("event registration → booking page with QR", async () => {
     await page.goto(BASE + "/events/tribe-night-demo");
-    await page.getByRole("link", { name: /Register now|Join the waitlist/ }).click();
+    await page.getByRole("link", { name: /Register now|Join the waitlist/ }).first().click();
     await page.getByLabel("Full name").fill("E2E Registrant");
     await page.getByLabel("Mobile number").fill("9884265131");
     await page.getByLabel("Email").fill(`reg-${uniq}@example.com`);

@@ -6,9 +6,13 @@ import type { Color } from "three";
 /**
  * Fixed, full-viewport 3D backdrop for the public site.
  *
- * A calm composition: a softly glowing cross at the centre, two slow halo rings, an orbit of
- * light "nodes" joined by fine lines (the church family), a faint perspective floor and drifting
- * motes of light. The camera glides with scroll progress and eases toward the pointer.
+ * A calm composition: a bevelled ivory cross in a soft beam of light, two slow halo rings, an
+ * orbit of light "nodes" joined by fine lines (the church family), a faint perspective floor and
+ * drifting motes of light. The camera glides with scroll progress and eases toward the pointer;
+ * the cross always turns to face the viewer, so it never reads as a thin bar.
+ *
+ * Layout: on wide screens the projection is shifted (camera view offset) so the centrepiece sits
+ * in the open column to the right of the hero copy instead of behind the text.
  *
  * Robustness:
  *  - three.js is imported lazily, so it never blocks first paint or hydration.
@@ -34,12 +38,14 @@ export function SceneBackground() {
 
       let renderer: import("three").WebGLRenderer;
       try {
-        renderer = new THREE.WebGLRenderer({ antialias: !small(), alpha: true, powerPreference: "low-power" });
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "low-power" });
       } catch {
         return; // WebGL unavailable — keep the CSS background.
       }
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       renderer.setClearColor(0x000000, 0);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.1;
       renderer.domElement.setAttribute("aria-hidden", "true");
       host.appendChild(renderer.domElement);
 
@@ -60,6 +66,10 @@ export function SceneBackground() {
       const warm = new THREE.PointLight(0xf3cf7a, 14, 14, 1.6);
       warm.position.set(0, 0.6, 1.4);
       scene.add(warm);
+      // Cool rim light from behind gives the cross a clean, defined edge.
+      const rim = new THREE.DirectionalLight(0x9db1ff, 0.9);
+      rim.position.set(-3, 2, -5);
+      scene.add(rim);
 
       // Everything that forms the centrepiece lives in one group so it can be offset as a whole.
       const world = new THREE.Group();
@@ -84,13 +94,49 @@ export function SceneBackground() {
         return s;
       };
 
-      // Cross
+      // Soft vertical beam of light behind the cross (canvas texture, additive).
+      const beamTex = (() => {
+        const c = document.createElement("canvas");
+        c.width = 64;
+        c.height = 256;
+        const g = c.getContext("2d")!;
+        const across = g.createLinearGradient(0, 0, 64, 0);
+        across.addColorStop(0, "rgba(255,255,255,0)");
+        across.addColorStop(0.5, "rgba(255,255,255,1)");
+        across.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = across;
+        g.fillRect(0, 0, 64, 256);
+        g.globalCompositeOperation = "destination-in";
+        const along = g.createLinearGradient(0, 0, 0, 256);
+        along.addColorStop(0, "rgba(0,0,0,0)");
+        along.addColorStop(0.35, "rgba(0,0,0,1)");
+        along.addColorStop(0.75, "rgba(0,0,0,0.6)");
+        along.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = along;
+        g.fillRect(0, 0, 64, 256);
+        return keep(new THREE.CanvasTexture(c));
+      })();
+      const beam = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: beamTex, color: GOLD, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending })));
+      beam.scale.set(1.6, 9, 1);
+      beam.position.set(0, 1.2, -0.6);
+      world.add(beam);
+
+      // Cross: one extruded outline with rounded (bevelled) edges, so it reads as a single clean form.
       const cross = new THREE.Group();
-      const crossMat = keep(new THREE.MeshStandardMaterial({ color: 0xf4f1ea, emissive: GOLD, emissiveIntensity: 0.32, metalness: 0.25, roughness: 0.35 }));
-      const vBeam = new THREE.Mesh(keep(new THREE.BoxGeometry(0.2, 2.3, 0.2)), crossMat);
-      const hBeam = new THREE.Mesh(keep(new THREE.BoxGeometry(1.36, 0.2, 0.2)), crossMat);
-      hBeam.position.y = 0.42;
-      cross.add(vBeam, hBeam, glow(GOLD, 4.2, 0.28));
+      const crossShape = (() => {
+        const w = 0.1, top = 1.12, bottom = -1.12, arm = 0.64, y = 0.42, t = 0.1;
+        const sh = new THREE.Shape();
+        sh.moveTo(-w, bottom);
+        [[w, bottom], [w, y - t], [arm, y - t], [arm, y + t], [w, y + t], [w, top], [-w, top], [-w, y + t], [-arm, y + t], [-arm, y - t], [-w, y - t]].forEach(([x, yy]) => sh.lineTo(x!, yy!));
+        sh.closePath();
+        return sh;
+      })();
+      const crossGeo = keep(new THREE.ExtrudeGeometry(crossShape, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.045, bevelSize: 0.035, bevelSegments: 5, curveSegments: 4 }));
+      crossGeo.translate(0, 0, -0.06);
+      const crossMat = keep(
+        new THREE.MeshPhysicalMaterial({ color: 0xf7f2e8, emissive: GOLD, emissiveIntensity: 0.2, metalness: 0.1, roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.3 }),
+      );
+      cross.add(new THREE.Mesh(crossGeo, crossMat), glow(GOLD, 4.4, 0.3));
       world.add(cross);
 
       // Halo rings
@@ -149,14 +195,14 @@ export function SceneBackground() {
       const grid = new THREE.GridHelper(90, 90, 0x3a4a8a, 0x1c2550);
       const gridMat = grid.material as import("three").Material;
       gridMat.transparent = true;
-      gridMat.opacity = 0.32;
+      gridMat.opacity = 0.2;
       grid.position.y = -3.4;
       keep(grid.geometry);
       keep(gridMat);
       scene.add(grid);
 
       // Motes of light
-      const moteCount = small() ? 220 : 620;
+      const moteCount = small() ? 160 : 420;
       const motePos = new Float32Array(moteCount * 3);
       for (let i = 0; i < moteCount; i++) {
         motePos[i * 3] = (Math.random() - 0.5) * 34;
@@ -167,7 +213,7 @@ export function SceneBackground() {
       moteGeo.setAttribute("position", new THREE.BufferAttribute(motePos, 3));
       const motes = new THREE.Points(
         moteGeo,
-        keep(new THREE.PointsMaterial({ size: 0.05, map: glowTex, color: 0xdfe6ff, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true })),
+        keep(new THREE.PointsMaterial({ size: 0.045, map: glowTex, color: 0xdfe6ff, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true })),
       );
       scene.add(motes);
 
@@ -181,9 +227,16 @@ export function SceneBackground() {
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        // Desktop: the centrepiece sits right of the content column. Phones: centred and quieter.
-        world.position.x = w >= 1024 ? 2.6 : 0;
-        renderer.domElement.style.opacity = w < 768 ? "0.55" : "1";
+        // Desktop: shift the whole projection so the centrepiece sits right of the content column
+        // (a view offset moves the picture, not the world, so it stays put as the camera orbits).
+        // Phones and tablets: centred and quieter behind the full-width panels.
+        // Between 1024 and 1280 the hero card takes more of the width, so the picture moves
+        // further right and is drawn a little smaller to fit the narrower free column.
+        if (w >= 1024) camera.setViewOffset(w, h, -w * (w >= 1280 ? 0.23 : 0.33), 0, w, h);
+        else camera.clearViewOffset();
+        camera.zoom = w >= 1280 || w < 1024 ? 1 : 0.74;
+        camera.updateProjectionMatrix();
+        renderer.domElement.style.opacity = w < 768 ? "0.5" : "1";
       };
       const readScroll = () => {
         const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -210,15 +263,17 @@ export function SceneBackground() {
         const theta = -0.35 + p * Math.PI * 0.85;
         const radius = 10.5 - Math.sin(p * Math.PI) * 3.2;
         camera.position.set(
-          world.position.x + Math.sin(theta) * radius + current.px * 0.5,
+          Math.sin(theta) * radius + current.px * 0.5,
           0.9 - p * 1.6 - current.py * 0.35,
           Math.cos(theta) * radius,
         );
-        camera.lookAt(world.position.x * 0.62, -0.1 - p * 0.4, 0);
+        camera.lookAt(0, -0.1 - p * 0.4, 0);
 
         const t = elapsed;
-        cross.rotation.y = Math.sin(t * 0.25) * 0.35 + p * 1.2;
+        // Face the camera, with only a gentle sway — the cross never turns edge-on.
+        cross.rotation.y = Math.atan2(camera.position.x, camera.position.z) + Math.sin(t * 0.3) * 0.22;
         cross.position.y = Math.sin(t * 0.6) * 0.06;
+        beam.material.opacity = 0.13 + Math.sin(t * 0.4) * 0.03;
         halo.rotation.z = t * 0.08;
         halo2.rotation.z = -t * 0.05;
         arc.rotation.z = t * 0.012;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Reveal } from "./reveal";
 
@@ -108,23 +108,38 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
   );
 }
 
-/** "A → B → C" chip flow (reference style). Items can be links. */
+/**
+ * "A → B → C" chip flow (reference style). Items can be links.
+ * Each arrow trails the chip before it, so a wrapped line ends with "→" and the next line
+ * always starts with a chip — never with a lone arrow.
+ */
 export function Flow({ items, className }: { items: (string | { label: string; href: string })[]; className?: string }) {
   return (
     <ul className={cn("flex flex-wrap items-center gap-x-2 gap-y-2.5", className)}>
       {items.map((it, i) => (
-        <Fragment key={typeof it === "string" ? it : it.href}>
-          {i > 0 && <li aria-hidden className="font-mono text-xs text-accent">→</li>}
-          <li>
-            {typeof it === "string" ? (
-              <span className="chip text-ink/85">{it}</span>
-            ) : (
-              <Link href={it.href} className="chip text-ink/85 transition-colors hover:border-white/30 hover:text-white">{it.label}</Link>
-            )}
-          </li>
-        </Fragment>
+        <li key={typeof it === "string" ? it : it.href} className="flex items-center gap-2 whitespace-nowrap">
+          {typeof it === "string" ? (
+            <span className="chip text-ink/85">{it}</span>
+          ) : (
+            <Link href={it.href} className="chip text-ink/85 transition-colors hover:border-white/30 hover:text-white">{it.label}</Link>
+          )}
+          {i < items.length - 1 && <span aria-hidden className="font-mono text-xs text-accent">→</span>}
+        </li>
       ))}
     </ul>
+  );
+}
+
+/** An email address that may only wrap after the "@", never mid-word. */
+export function EmailText({ email }: { email: string }) {
+  const at = email.indexOf("@");
+  if (at < 0) return <>{email}</>;
+  return (
+    <>
+      {email.slice(0, at + 1)}
+      <wbr />
+      {email.slice(at + 1)}
+    </>
   );
 }
 
