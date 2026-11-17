@@ -11,9 +11,19 @@ export function ServiceForm({ service }: { service?: Service }) {
   const [state, action] = useActionState<FormState, FormData>(saveServiceAction.bind(null, service?.id ?? null), { ok: false });
   const v = (k: string, f = "") => (typeof state.values?.[k] === "string" ? (state.values[k] as string) : f);
   const [rec, setRec] = useState(v("recurrence", service?.recurrence ?? "WEEKLY"));
+  // End time can't be before the start time: the picker enforces it, the server re-checks it.
+  const [start, setStart] = useState(v("startTime", service?.startTime ?? ""));
 
   return (
-    <form action={action} className="space-y-6" noValidate>
+    <form
+      action={action}
+      className="space-y-6"
+      noValidate
+      onChange={(e) => {
+        const t = e.target as unknown as HTMLInputElement;
+        if (t.name === "startTime") setStart(t.value);
+      }}
+    >
       <FormAlert state={state} />
       <section className="grid gap-5 rounded-2xl border border-line bg-white p-6 md:grid-cols-2">
         <TextField name="name" label="Name" required defaultValue={v("name", service?.name)} state={state} />
@@ -54,7 +64,7 @@ export function ServiceForm({ service }: { service?: Service }) {
           </select>
         </div>
         <TextField name="startTime" type="time" label="Start time (IST)" defaultValue={v("startTime", service?.startTime ?? "")} state={state} hint="Leave empty if the time is to be announced." />
-        <TextField name="endTime" type="time" label="End time" defaultValue={v("endTime", service?.endTime ?? "")} state={state} />
+        <TextField name="endTime" type="time" label="End time" min={start} defaultValue={v("endTime", service?.endTime ?? "")} state={state} hint={start ? "Must be after the start time." : undefined} />
         <TextField name="venue" label="Venue / hall" defaultValue={v("venue", service?.venue ?? "")} state={state} />
         <TextField name="sortOrder" type="number" label="Display order" defaultValue={v("sortOrder", String(service?.sortOrder ?? 0))} state={state} />
         <TextField name="slug" label="Slug" defaultValue={v("slug", service?.slug ?? "")} state={state} hint="Used to link ministries to this time." />

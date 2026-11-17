@@ -67,10 +67,23 @@ async function main() {
     });
   }
 
+  await step("header section links glide to each home-page section", async () => {
+    await page.goto(BASE + "/");
+    for (const id of ["about", "services", "ministries", "events", "involved", "contact"]) {
+      await page.locator(`header a[href="/#${id}"]:visible`).first().click();
+      await page.waitForFunction((id) => {
+        const top = document.getElementById(id)?.getBoundingClientRect().top ?? 9999;
+        return Math.abs(top) < 140;
+      }, id, { timeout: 5000 });
+      const current = await page.locator(`header a[href="/#${id}"][aria-current]`).count();
+      if (!current) throw new Error(`nav entry for #${id} not highlighted`);
+    }
+  });
+
   await step("client-side navigation never leaves sections invisible", async () => {
     await page.goto(BASE + "/");
     for (const link of ["/about", "/ministries", "/events", "/contact", "/services", "/give"]) {
-      await page.locator(`header a[href="${link}"]:visible`).first().click();
+      await page.locator(`footer a[href="${link}"]:visible`).first().click();
       await page.waitForURL("**" + link);
       await page.locator("main h1").first().waitFor();
       await page.waitForTimeout(400);
@@ -82,7 +95,7 @@ async function main() {
         }
       });
       await page.waitForTimeout(900);
-      const hidden = await page.$$eval("[data-reveal]", (els) => els.filter((e) => getComputedStyle(e).opacity === "0").length);
+      const hidden = await page.$$eval('[data-reveal-state="pending"]', (els) => els.length);
       if (hidden > 0) throw new Error(`${hidden} section(s) invisible on ${link}`);
     }
   });
@@ -148,7 +161,7 @@ async function main() {
     await page.getByRole("button", { name: /Confirm registration|Join the waitlist/ }).click();
     await page.waitForURL(/\/booking\//, { timeout: 15000 });
     bookingUrl = page.url();
-    refCode = (await page.locator("p.font-display").first().innerText()).trim();
+    refCode = (await page.locator("[data-ref-code]").first().innerText()).trim();
     if (!/^ARK-[A-Z0-9]{6}$/.test(refCode)) throw new Error(`unexpected ref ${refCode}`);
     await page.getByAltText(/QR code for booking/).waitFor();
     await shot(page, "04-booking");

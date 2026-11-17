@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PageHero, Section } from "@/components/ui/section";
 import { Photo } from "@/components/ui/photo";
 import { getSection } from "@/server/content";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Other services",
@@ -14,48 +15,59 @@ export default async function OtherServicesPage() {
   const { otherServices, specialSundays } = await getSection("services");
   return (
     <>
-      <PageHero eyebrow="Other services" title="Seek ye first the kingdom of God" lead="Dawn services, nights of prayer, seasons of fasting and Special Sundays — gatherings that shape our life together." />
+      <PageHero
+        eyebrow="Other services"
+        title="Seek ye first the kingdom of God"
+        lead="Dawn services, nights of prayer, seasons of fasting and Special Sundays — gatherings that shape our life together."
+        crumbs={[{ href: "/services", label: "Services" }, { href: "/services/special", label: "Other services" }]}
+      >
+        {otherServices.map((s) => (
+          <a key={s.slug} href={`#${s.slug}`} className="chip transition-colors hover:border-white/30 hover:text-white">{s.title}</a>
+        ))}
+        <a href="#special-sundays" className="chip transition-colors hover:border-white/30 hover:text-white">{specialSundays.title}</a>
+      </PageHero>
 
       {otherServices.map((s, i) => (
-        <Section key={s.slug} id={s.slug} tone={i % 2 ? "surface" : "white"}>
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div className={i % 2 ? "lg:order-2" : undefined}>
-              {s.when && <p className="eyebrow mb-3">{s.when}</p>}
-              <h2 className="text-3xl font-semibold sm:text-4xl">{s.title}</h2>
-              {s.verse && <p className="mt-3 font-display text-lg italic text-brand-600">“{s.verse}”</p>}
+        <Section key={s.slug} id={s.slug}>
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+            <div className={cn(i % 2 && "lg:order-2")}>
+              {s.when ? <p className="eyebrow mb-4">{s.when}</p> : <p className="num mb-4">{String(i + 1).padStart(2, "0")}</p>}
+              <h2 className="section-title">{s.title}</h2>
+              {s.verse && <p className="mt-4 font-display text-xl italic text-glow-gold">“{s.verse}”</p>}
               <div className="prose-ark mt-5">
-                {s.body.map((p) => <p key={p.slice(0, 24)}>{p}</p>)}
+                {s.body.map((p, j) => <p key={j}>{p}</p>)}
               </div>
-              <Link href={`/contact?purpose=general`} className="btn-primary mt-6">Join {s.title}</Link>
+              <Link href="/contact?purpose=general#form" className="btn-primary mt-6">Join {s.title}</Link>
             </div>
             {s.image ? (
               <Photo src={s.image.src} alt={s.image.alt} ratio={s.slug === "21-days-of-prayer" ? "1/1" : "4/3"} />
             ) : (
-              <div className="hero-bg hidden aspect-[4/3] items-center justify-center rounded-3xl p-10 text-center text-white lg:flex">
-                <p className="font-display text-3xl font-semibold">{s.title}</p>
+              <div className="tile hidden aspect-[4/3] items-center justify-center p-10 text-center lg:flex">
+                <p className="text-gradient font-display text-4xl font-medium">{s.title}</p>
               </div>
             )}
           </div>
         </Section>
       ))}
 
-      <Section tone="navy" id="special-sundays">
+      <Section id="special-sundays">
         <div className="max-w-3xl">
-          <p className="eyebrow mb-3 text-brand-300">Celebrations</p>
-          <h2 className="text-3xl font-semibold sm:text-4xl">{specialSundays.title}</h2>
-          <p className="mt-5 leading-relaxed text-white/80">{specialSundays.intro}</p>
+          <p className="eyebrow mb-4">Celebrations</p>
+          <h2 className="section-title">{specialSundays.title}</h2>
+          <p className="lead mt-5">{specialSundays.intro}</p>
         </div>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {specialSundays.items.map((it) => (
-            <article key={it.title} className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="text-xl font-semibold">{it.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-white/75">{it.body}</p>
+        <div className="mt-10 grid gap-3 md:grid-cols-3">
+          {specialSundays.items.map((it, i) => (
+            <article key={`${i}-${it.title}`} className="tile p-6">
+              <p className="num">{String(i + 1).padStart(2, "0")}</p>
+              <h3 className="mt-2 text-xl text-white">{it.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{it.body}</p>
             </article>
           ))}
         </div>
-        <p className="mt-10 max-w-3xl leading-relaxed text-white/80">{specialSundays.outro}</p>
+        <p className="mt-10 max-w-3xl leading-relaxed text-muted">{specialSundays.outro}</p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {specialSundays.images.map((img) => <Photo key={img.src} src={img.src} alt={img.alt} ratio="16/9" />)}
+          {specialSundays.images.map((img, i) => <Photo key={`${i}-${img.src}`} src={img.src} alt={img.alt} ratio="16/9" />)}
         </div>
       </Section>
     </>

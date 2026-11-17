@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef, useState, type FormEvent } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState, type FocusEvent, type FormEvent } from "react";
 import type { Event } from "@prisma/client";
 import { saveEventAction } from "@/server/actions/admin";
 import type { FormState } from "@/lib/validation";
@@ -43,16 +43,55 @@ export function EventForm({ event, ministries }: { event?: Event; ministries: { 
     registrationEnabled: event ? event.registrationEnabled : true,
     ministrySlug: event?.ministrySlug ?? "",
   }));
-  const readForm = (form: HTMLFormElement) => {
+  const readForm = (form: HTMLFormElement, changed?: string) => {
     const fd = new FormData(form);
+    const startsAt = String(fd.get("startsAt") ?? "");
     setDraft({
       title: String(fd.get("title") ?? ""),
       summary: String(fd.get("summary") ?? ""),
       venue: String(fd.get("venue") ?? ""),
-      startsAt: String(fd.get("startsAt") ?? ""),
+      startsAt,
       registrationEnabled: fd.get("registrationEnabled") === "on",
       ministrySlug: String(fd.get("ministrySlug") ?? ""),
     });
+    // Moving the start can invalidate an end / closing time picked earlier: clear it and say why,
+    // rather than letting an impossible range reach the server.
+    if (changed === "startsAt") {
+      const start = parseIstLocal(startsAt);
+      const clear = (name: "endsAt" | "registrationClosesAt", bad: (d: Date) => boolean, message: string) => {
+        const input = form.elements.namedItem(name) as HTMLInputElement | null;
+        const d = input?.value ? parseIstLocal(input.value) : null;
+        if (input && start && d && bad(d)) {
+          input.value = "";
+          setClientErrors((e) => ({ ...e, [name]: message }));
+        }
+      };
+      clear("endsAt", (d) => d <= start!, "The end was before the new start — choose the end again.");
+      clear("registrationClosesAt", (d) => d > start!, "Registration closed after the new start — choose again or leave empty.");
+    }
+  };
+
+  /** Same rules as the server, checked before submitting so mistakes are caught immediately. */
+  const validateRanges = (form: HTMLFormElement): Record<string, string> => {
+    const get = (n: string) => String((form.elements.namedItem(n) as HTMLInputElement | null)?.value ?? "");
+    const errs: Record<string, string> = {};
+    const start = parseIstLocal(get("startsAt"));
+    const end = get("endsAt") ? parseIstLocal(get("endsAt")) : null;
+    const closes = get("registrationClosesAt") ? parseIstLocal(get("registrationClosesAt")) : null;
+    if (!event && start && start.getTime() < Date.now()) errs.startsAt = "A new event must start in the future";
+    if (start && end && end <= start) errs.endsAt = "End must be after the start";
+    if (start && closes && closes > start) errs.registrationClosesAt = "Registration must close before the event starts";
+    const capacity = Number(get("capacity"));
+    const maxSeats = Number(get("maxSeatsPerBooking"));
+    if (get("capacity") && Number.isInteger(capacity) && capacity > 0 && maxSeats > capacity)
+      errs.maxSeatsPerBooking = `Can't be more than the capacity (${capacity})`;
+    return errs;
+  };
+
+  /** Date pickers: never offer past start times for a new event. Set on focus so "now" is always current. */
+  const onFocusField = (e: FocusEvent<HTMLFormElement>) => {
+    const t = e.target as unknown as HTMLInputElement;
+    if (!event && t.name === "startsAt") t.min = toIstLocalInput(new Date());
   };
 
   // Bring the first problem into view — the Create button sits at the bottom, far from the fields.
@@ -75,6 +114,7 @@ export function EventForm({ event, ministries }: { event?: Event; ministries: { 
     form.querySelectorAll<HTMLInputElement>('input[type="datetime-local"]').forEach((el) => {
       if (el.validity.badInput) partial[el.name] = "Enter both a date and a time";
     });
+    Object.assign(partial, validateRanges(form), partial);
     setClientErrors(partial);
     if (Object.keys(partial).length) {
       requestAnimationFrame(showFirstError);
@@ -97,9 +137,11 @@ export function EventForm({ event, ministries }: { event?: Event; ministries: { 
       ref={formRef}
       onSubmit={submit}
       onChange={(e) => {
-        readForm(e.currentTarget);
-        clearClientError((e.target as unknown as HTMLInputElement).name);
+        const name = (e.target as unknown as HTMLInputElement).name;
+        clearClientError(name);
+        readForm(e.currentTarget, name);
       }}
+      onFocus={onFocusField}
       className="space-y-6"
       noValidate
     >
@@ -120,7 +162,7 @@ export function EventForm({ event, ministries }: { event?: Event; ministries: { 
 
       <section className="grid gap-5 rounded-2xl border border-line bg-white p-6 md:grid-cols-2">
         <TextField name="startsAt" type="datetime-local" label="Starts (IST)" required defaultValue={v("startsAt", toIstLocalInput(event?.startsAt))} state={state} />
-        <TextField name="endsAt" type="datetime-local" label="Ends (IST)" defaultValue={v("endsAt", toIstLocalInput(event?.endsAt))} state={state} />
+        <TextField name="endsAt" type="datetime-local" label="Ends (IST)" min={draft.startsAt} defaultValue={v("endsAt", toIstLocalInput(event?.endsAt))} state={state} hint="Optional. Must be after the start." />
         <TextField name="venue" label="Venue" required defaultValue={v("venue", event?.venue ?? "The Ark Victory Church, Sembakkam")} state={state} className="md:col-span-2" />
         <div className="md:col-span-2">
           <span className="field-label">Image</span>
@@ -135,9 +177,9 @@ export function EventForm({ event, ministries }: { event?: Event; ministries: { 
           <Check name="registrationEnabled" label="Require registration" defaultChecked={event ? event.registrationEnabled : true} hint="Untick for drop-in events — the page will say “No registration needed”." />
           <Check name="waitlistEnabled" label="Enable waitlist when full" defaultChecked={event ? event.waitlistEnabled : true} hint="Waitlisted people are confirmed automatically (first come, first served) when seats free up." />
         </div>
-        <TextField name="capacity" type="number" inputMode="numeric" label="Capacity (seats)" defaultValue={v("capacity", event?.capacity?.toString() ?? "")} state={state} hint="Leave empty for unlimited." />
-        <TextField name="maxSeatsPerBooking" type="number" inputMode="numeric" label="Max seats per booking" required defaultValue={v("maxSeatsPerBooking", String(event?.maxSeatsPerBooking ?? 5))} state={state} />
-        <TextField name="registrationClosesAt" type="datetime-local" label="Registration closes (IST)" defaultValue={v("registrationClosesAt", toIstLocalInput(event?.registrationClosesAt))} state={state} hint="Optional. Defaults to the event start time." />
+        <TextField name="capacity" type="number" inputMode="numeric" min="1" label="Capacity (seats)" defaultValue={v("capacity", event?.capacity?.toString() ?? "")} state={state} hint="Leave empty for unlimited." />
+        <TextField name="maxSeatsPerBooking" type="number" inputMode="numeric" min="1" max="20" label="Max seats per booking" required defaultValue={v("maxSeatsPerBooking", String(event?.maxSeatsPerBooking ?? 5))} state={state} />
+        <TextField name="registrationClosesAt" type="datetime-local" label="Registration closes (IST)" max={draft.startsAt} defaultValue={v("registrationClosesAt", toIstLocalInput(event?.registrationClosesAt))} state={state} hint="Optional. Defaults to the event start time; can't be after it." />
       </section>
 
       <section className="rounded-2xl border border-line bg-white p-6">

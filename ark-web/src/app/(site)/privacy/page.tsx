@@ -7,11 +7,10 @@ export const metadata: Metadata = { title: "Privacy notice", alternates: { canon
 export default async function PrivacyPage() {
   const site = await getSite();
   return (
-    <>
-      <div className="hero-bg h-24 sm:h-28" />
-      <Section className="pt-10">
-        <article className="prose-ark mx-auto max-w-3xl [&_h2]:mb-3 [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-ink [&_li]:mb-1 [&_li]:text-muted [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
-          <h1 className="mb-6 text-4xl font-semibold text-ink">Privacy notice</h1>
+    <Section width="narrow" className="pt-24 sm:pt-32">
+        <article className="prose-ark [&_a]:text-accent [&_h2]:mb-3 [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-medium [&_h2]:text-white [&_li]:mb-1 [&_li]:text-muted [&_strong]:text-ink [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-6">
+          <p className="eyebrow mb-4">Your data</p>
+          <h1 className="section-title mb-6">Privacy notice</h1>
           <p>
             {site.name} (“we”, “us”) respects your privacy. This notice explains how we handle personal data collected through this website,
             in line with India&apos;s Digital Personal Data Protection Act, 2023.
@@ -57,12 +56,11 @@ export default async function PrivacyPage() {
 
           <h2>Contact &amp; grievances</h2>
           <p>
-            Email <a href={`mailto:${site.contact.email}`} className="text-brand-600 underline">{site.contact.email}</a> or call {site.contact.phoneDisplay}, or write
+            Email <a href={`mailto:${site.contact.email}`} className="underline underline-offset-4">{site.contact.email}</a> or call {site.contact.phoneDisplay}, or write
             to us at {site.address.full}. We will respond within 30 days.
           </p>
           <p className="text-sm">Last updated: November 2026.</p>
         </article>
-      </Section>
-    </>
+    </Section>
   );
 }

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function OfflinePage() {
   const site = await getSite();
   return (
-    <main className="hero-bg flex min-h-dvh items-center px-6 py-16 text-white">
+    <main className="flex min-h-dvh items-center bg-[radial-gradient(900px_600px_at_70%_20%,rgb(76_98_196/0.25),transparent_65%),linear-gradient(180deg,#050812,#03050c)] px-6 py-16 text-white">
       <div className="mx-auto max-w-md text-center">
         <Image src="/images/logo-white.webp" alt={site.name} width={160} height={86} className="mx-auto h-16 w-auto" priority />
         <h1 className="mt-10 text-3xl font-semibold">You&apos;re offline</h1>

@@ -162,9 +162,9 @@ export function PwaProvider({ children }: { children: ReactNode }) {
       )}
 
       {waiting && (
-        <div role="status" className="animate-toast-in fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] mx-auto flex max-w-md items-center justify-between gap-4 rounded-2xl bg-navy-900 px-5 py-4 text-sm text-white shadow-2xl lg:bottom-6">
+        <div role="status" className="animate-toast-in fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] mx-auto flex max-w-md items-center justify-between gap-4 panel rounded-2xl px-5 py-4 text-sm text-white shadow-2xl lg:bottom-6">
           <span>A new version of the app is available.</span>
-          <button className="btn-light shrink-0 px-4 py-2" onClick={() => {
+          <button className="btn-primary shrink-0 px-4 py-2" onClick={() => {
               updateRequested = true;
               waiting.postMessage("SKIP_WAITING");
             }}>
@@ -174,7 +174,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
       )}
 
       {showBanner && !waiting && (
-        <div role="dialog" aria-label="Install The Ark app" className="animate-toast-in fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[55] mx-auto max-w-md rounded-2xl border border-line bg-white p-4 shadow-2xl lg:bottom-6">
+        <div role="dialog" aria-label="Install The Ark app" className="animate-toast-in fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[55] mx-auto max-w-md panel rounded-2xl p-4 shadow-2xl lg:bottom-6">
           <div className="flex items-start gap-4">
             <Image src="/icon-192.png" alt="" width={48} height={48} className="h-12 w-12 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1">

@@ -136,7 +136,7 @@ async function main() {
     await humanPause();
     await pub.getByRole("button", { name: "Confirm registration" }).click();
     await pub.waitForURL(/\/booking\//, { timeout: 15000 });
-    refCode = (await pub.locator("p.font-display").first().innerText()).trim();
+    refCode = (await pub.locator("[data-ref-code]").first().innerText()).trim();
     const reg = await db.registration.findUnique({ where: { refCode } });
     assert(reg?.eventId === eventId && reg.seats === 2 && reg.status === "CONFIRMED", "registration not stored correctly");
     await admin.goto(`${BASE}/admin/events/${eventId}`);

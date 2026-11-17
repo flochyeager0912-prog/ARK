@@ -26,7 +26,7 @@ export function BotProtection() {
       {siteKey && (
         <>
           <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-          <div className="cf-turnstile" data-sitekey={siteKey} data-theme="light" />
+          <div className="cf-turnstile" data-sitekey={siteKey} data-theme="auto" />
         </>
       )}
     </>
@@ -68,6 +68,8 @@ export function TextField({
   defaultValue,
   inputMode,
   maxLength,
+  min,
+  max,
   ...p
 }: BaseProps & {
   type?: string;
@@ -76,6 +78,9 @@ export function TextField({
   defaultValue?: string;
   inputMode?: "text" | "tel" | "email" | "numeric";
   maxLength?: number;
+  /** Lower / upper bound for date, time and number inputs (greys out invalid choices in pickers). */
+  min?: string;
+  max?: string;
 }) {
   const err = p.state?.errors?.[p.name];
   const id = `f-${p.name}`;
@@ -93,6 +98,8 @@ export function TextField({
         placeholder={placeholder}
         inputMode={inputMode}
         maxLength={maxLength}
+        min={min || undefined}
+        max={max || undefined}
         key={val(p.state, p.name, defaultValue)}
         defaultValue={val(p.state, p.name, defaultValue)}
         aria-invalid={err ? true : undefined}
@@ -185,8 +192,8 @@ export function CheckboxGroup({ options, ...p }: BaseProps & { options: readonly
       {p.hint && <p className="-mt-1 mb-2 text-xs text-muted">{p.hint}</p>}
       <div className="grid gap-2 sm:grid-cols-2">
         {options.map((o) => (
-          <label key={o} className="flex cursor-pointer items-center gap-3 rounded-xl border border-line px-3 py-2.5 text-sm has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50">
-            <input type="checkbox" name={p.name} value={o} defaultChecked={chosen.includes(o)} className="h-4 w-4 accent-brand-600" />
+          <label key={o} className="flex cursor-pointer items-center gap-3 rounded-xl border border-line px-3 py-2.5 text-sm transition-colors hover:border-accent/40 has-[:checked]:border-accent/70 has-[:checked]:bg-accent-soft">
+            <input type="checkbox" name={p.name} value={o} defaultChecked={chosen.includes(o)} className="h-4 w-4 accent-accent" />
             {o}
           </label>
         ))}
@@ -201,7 +208,7 @@ export function ConsentCheckbox({ state, children }: { state?: FormState; childr
   return (
     <div>
       <label className="flex items-start gap-3 text-sm text-muted">
-        <input type="checkbox" name="consent" required className="mt-0.5 h-4 w-4 shrink-0 accent-brand-600" aria-invalid={err ? true : undefined} />
+        <input type="checkbox" name="consent" required className="mt-0.5 h-4 w-4 shrink-0 accent-accent" aria-invalid={err ? true : undefined} />
         <span>{children}</span>
       </label>
       {err && <p className="field-error">{err}</p>}
@@ -212,7 +219,7 @@ export function ConsentCheckbox({ state, children }: { state?: FormState; childr
 export function FormAlert({ state }: { state?: FormState }) {
   if (!state?.message) return null;
   return (
-    <div role={state.ok ? "status" : "alert"} className={cn("rounded-xl px-4 py-3 text-sm", state.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700")}>
+    <div role={state.ok ? "status" : "alert"} className={cn("rounded-xl px-4 py-3 text-sm", state.ok ? "tone-ok" : "tone-bad")}>
       {state.message}
     </div>
   );

@@ -1,34 +1,41 @@
 import Link from "next/link";
-import Image from "next/image";
 import { InstallButton } from "@/components/pwa/install-button";
 import { IconFacebook, IconInstagram, IconMail, IconPhone, IconPin, IconYouTube } from "@/components/ui/icons";
 import { footerNav } from "@/content/site";
 import { getSite } from "@/server/content";
+import { BackToTop } from "./back-to-top";
 
 export async function SiteFooter() {
   const site = await getSite();
   const year = new Date().getFullYear();
+  const social = [
+    { href: site.social.youtube, label: "YouTube", Icon: IconYouTube },
+    { href: site.social.instagram, label: "Instagram", Icon: IconInstagram },
+    { href: site.social.facebook, label: "Facebook", Icon: IconFacebook },
+  ];
   return (
-    <footer className="bg-navy-950 text-white/75">
-      <div className="container-page grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-4">
+    <footer className="relative mt-24 border-t border-white/[0.06] bg-night-950/80 backdrop-blur-xl">
+      <div className="container-page grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1.4fr] lg:gap-10">
         <div className="space-y-5">
-          <Image src="/images/logo-white.webp" alt="The Ark Victory Church" width={160} height={86} className="h-16 w-auto" />
-          <p className="max-w-xs text-sm leading-relaxed">{site.description}</p>
+          <p className="font-display text-2xl font-medium text-white">{site.name}</p>
+          <p className="max-w-xs text-sm leading-relaxed text-muted">{site.description}</p>
           <div className="flex gap-2">
-            <a href={site.social.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="rounded-full bg-white/10 p-2.5 hover:bg-white/20 hover:text-white"><IconYouTube size={18} /></a>
-            <a href={site.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="rounded-full bg-white/10 p-2.5 hover:bg-white/20 hover:text-white"><IconInstagram size={18} /></a>
-            <a href={site.social.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="rounded-full bg-white/10 p-2.5 hover:bg-white/20 hover:text-white"><IconFacebook size={18} /></a>
+            {social.map(({ href, label, Icon }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="grid h-10 w-10 place-items-center rounded-full border border-white/10 text-muted transition-colors hover:border-white/30 hover:text-white">
+                <Icon size={17} />
+              </a>
+            ))}
           </div>
-          <InstallButton className="btn-ghost-light px-4 py-2" />
+          <InstallButton className="chip transition-colors hover:border-white/30 hover:text-white" />
         </div>
 
         {footerNav.map((col) => (
           <div key={col.title}>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">{col.title}</h2>
+            <h2 className="eyebrow mb-5">{col.title}</h2>
             <ul className="space-y-2.5 text-sm">
               {col.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="hover:text-white">{l.label}</Link>
+                  <Link href={l.href} className="text-muted transition-colors hover:text-white">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -36,29 +43,30 @@ export async function SiteFooter() {
         ))}
 
         <div>
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-white">Contact</h2>
-          <ul className="space-y-3 text-sm">
+          <h2 className="eyebrow mb-5">Visit</h2>
+          <ul className="space-y-3.5 text-sm text-muted">
             <li className="flex gap-3">
-              <IconPhone size={18} className="mt-0.5 shrink-0 text-brand-300" />
+              <IconPhone size={17} className="mt-0.5 shrink-0 text-glow-blue" />
               <a href={`tel:${site.contact.phoneE164}`} className="hover:text-white">{site.contact.phoneDisplay}</a>
             </li>
             <li className="flex gap-3">
-              <IconMail size={18} className="mt-0.5 shrink-0 text-brand-300" />
+              <IconMail size={17} className="mt-0.5 shrink-0 text-glow-blue" />
               <a href={`mailto:${site.contact.email}`} className="break-all hover:text-white">{site.contact.email}</a>
             </li>
             <li className="flex gap-3">
-              <IconPin size={18} className="mt-0.5 shrink-0 text-brand-300" />
-              <address className="not-italic">{site.address.full}</address>
+              <IconPin size={17} className="mt-0.5 shrink-0 text-glow-blue" />
+              <address className="not-italic leading-relaxed">{site.address.full}</address>
             </li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-white/10">
-        <div className="container-page flex flex-col gap-2 py-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-t border-white/[0.06]">
+        <div className="container-page flex flex-col gap-3 py-6 text-xs text-muted/80 sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} {site.name}. A member of {site.denomination}.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-5">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/admin" className="hover:text-white">Staff login</Link>
+            <BackToTop />
           </div>
         </div>
       </div>

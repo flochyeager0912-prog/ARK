@@ -13,7 +13,7 @@ export function ContactForm({ defaultPurpose, ministry, ministryName }: { defaul
 
   if (state.ok) {
     return (
-      <div className="rounded-2xl bg-emerald-50 p-6 text-emerald-900" role="status">
+      <div className="tone-ok rounded-2xl p-6" role="status">
         <h3 className="text-xl font-semibold">Message received 🙏</h3>
         <p className="mt-2">{state.message}</p>
         <p className="mt-2 text-sm">We&apos;ve also sent a confirmation to your email.</p>
@@ -36,7 +36,7 @@ export function ContactForm({ defaultPurpose, ministry, ministryName }: { defaul
       {ministry && (
         <>
           <input type="hidden" name="ministry" value={ministry} />
-          <p className="rounded-xl bg-brand-50 px-4 py-2 text-sm text-brand-800">Regarding: <strong>{ministryName ?? ministry}</strong></p>
+          <p className="rounded-xl bg-accent-soft px-4 py-2 text-sm text-ink">Regarding: <strong>{ministryName ?? ministry}</strong></p>
         </>
       )}
       <TextArea
@@ -49,7 +49,7 @@ export function ContactForm({ defaultPurpose, ministry, ministryName }: { defaul
       />
       {purpose === "prayer-request" && (
         <label className="flex items-start gap-3 text-sm text-muted">
-          <input type="checkbox" name="contactOk" defaultChecked className="mt-0.5 h-4 w-4 accent-brand-600" />
+          <input type="checkbox" name="contactOk" defaultChecked className="mt-0.5 h-4 w-4 accent-accent" />
           A pastor may contact me about this request.
         </label>
       )}

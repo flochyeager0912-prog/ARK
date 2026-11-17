@@ -16,7 +16,7 @@ export function RegisterForm({ eventId, maxSeats, waitlist }: { eventId: string;
     <form action={action} className="relative space-y-6" noValidate>
       <FormAlert state={state} />
       {waitlist && (
-        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p className="tone-warn rounded-xl px-4 py-3 text-sm">
           This event is currently full. Register to join the <strong>waitlist</strong> — we&apos;ll email you automatically if a place opens up.
         </p>
       )}
@@ -29,9 +29,9 @@ export function RegisterForm({ eventId, maxSeats, waitlist }: { eventId: string;
               <input type="radio" name="seats" value={n} defaultChecked={String(n) === partyVal} className="peer sr-only" aria-label={`${n} ${n === 1 ? "person" : "people"}`} />
               <span
                 className={cn(
-                  "grid h-12 min-w-12 place-items-center rounded-xl border border-line bg-white px-3 text-base font-semibold text-ink transition-all duration-200",
-                  "hover:border-brand-300 hover:bg-brand-50 peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white peer-checked:shadow-[0_8px_20px_-10px_rgb(31_63_174/0.8)]",
-                  "peer-focus-visible:ring-4 peer-focus-visible:ring-brand-100 active:scale-95",
+                  "grid h-12 min-w-12 place-items-center rounded-xl border border-line bg-field px-3 text-base font-semibold text-ink transition-all duration-200",
+                  "hover:border-accent/50 hover:bg-accent-soft peer-checked:border-accent peer-checked:bg-accent peer-checked:text-canvas",
+                  "peer-focus-visible:ring-4 peer-focus-visible:ring-accent/25 active:scale-95",
                 )}
               >
                 {n}

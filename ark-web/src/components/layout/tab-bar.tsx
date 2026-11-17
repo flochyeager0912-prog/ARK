@@ -26,7 +26,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Quick navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.07] bg-night-950/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {TABS.map((t) => {
@@ -38,10 +38,10 @@ export function TabBar() {
                 aria-current={on ? "page" : undefined}
                 className={cn(
                   "relative flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors active:scale-95",
-                  on ? "text-brand-600" : "text-muted hover:text-ink",
+                  on ? "text-white" : "text-muted hover:text-white",
                 )}
               >
-                <span className={cn("absolute top-0 h-0.5 w-8 rounded-full bg-brand-600 transition-opacity", on ? "opacity-100" : "opacity-0")} />
+                <span className={cn("absolute top-0 h-px w-8 rounded-full bg-gradient-to-r from-glow-blue to-glow-gold transition-opacity", on ? "opacity-100" : "opacity-0")} />
                 {t.icon}
                 {t.label}
               </Link>

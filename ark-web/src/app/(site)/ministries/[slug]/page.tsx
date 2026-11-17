@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getMinistries, getMinistry } from "@/server/content";
 import { getServices, getUpcomingEvents } from "@/server/queries";
-import { PageHero, Section } from "@/components/ui/section";
+import { Meta, PageHero, Section, SectionHeading } from "@/components/ui/section";
 import { Photo } from "@/components/ui/photo";
 import { ServiceCard } from "@/components/site/service-list";
 import { EventCard } from "@/components/site/event-card";
 import { IconExternal } from "@/components/ui/icons";
+import { slugify } from "@/lib/utils";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -32,47 +33,51 @@ export default async function MinistryPage({ params }: Props) {
 
   return (
     <>
-      <PageHero eyebrow={m.group} title={m.name} lead={m.tagline}>
+      <PageHero
+        eyebrow={m.group}
+        title={m.name}
+        lead={m.tagline}
+        crumbs={[{ href: "/ministries", label: "Ministries" }, { href: `/ministries#${slugify(m.group)}`, label: m.group }]}
+      >
         {m.cta.external ? (
-          <a href={m.cta.href} target="_blank" rel="noopener noreferrer" className="btn-light">{m.cta.label} <IconExternal size={16} /></a>
+          <a href={m.cta.href} target="_blank" rel="noopener noreferrer" className="btn-primary">{m.cta.label} <IconExternal size={14} /></a>
         ) : (
-          <Link href={m.cta.href} className="btn-light">{m.cta.label}</Link>
+          <Link href={m.cta.href} className="btn-primary">{m.cta.label}</Link>
         )}
+        <Link href={`/contact?purpose=join-ministry&ministry=${m.slug}#form`} className="btn-outline">Ask about {m.name}</Link>
       </PageHero>
 
       <Section>
-        <div className="grid items-start gap-12 lg:grid-cols-2">
+        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
           <div>
             {(m.ageRange || m.schedule) && (
-              <dl className="mb-6 grid gap-3 sm:grid-cols-2">
+              <div className="mb-8 grid gap-3 sm:grid-cols-2">
                 {m.ageRange && (
-                  <div className="rounded-2xl bg-surface p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-muted">Age group</dt>
-                    <dd className="mt-1 font-semibold">{m.ageRange}</dd>
+                  <div className="tile p-4">
+                    <Meta label="Age group">{m.ageRange}</Meta>
                   </div>
                 )}
                 {m.schedule && (
-                  <div className="rounded-2xl bg-surface p-4">
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-muted">When</dt>
-                    <dd className="mt-1 font-semibold">{m.schedule}</dd>
+                  <div className="tile p-4">
+                    <Meta label="When">{m.schedule}</Meta>
                   </div>
                 )}
-              </dl>
+              </div>
             )}
-            <div className="prose-ark">
-              {m.body.map((p) => <p key={p.slice(0, 24)}>{p}</p>)}
+            <div className="prose-ark text-[17px]">
+              {m.body.map((p, i) => <p key={i}>{p}</p>)}
             </div>
-            {m.highlights && (
-              <ul className="mt-6 flex flex-wrap gap-2">
-                {m.highlights.map((h) => <li key={h} className="badge bg-brand-50 px-3 py-1 text-sm text-brand-700">{h}</li>)}
+            {m.highlights && m.highlights.length > 0 && (
+              <ul className="mt-8 flex flex-wrap gap-2">
+                {m.highlights.map((h, i) => <li key={`${i}-${h}`} className="chip text-ink/85">{h}</li>)}
               </ul>
             )}
           </div>
           <div className="space-y-4">
             <Photo src={m.image.src} alt={m.image.alt} ratio="4/3" priority />
-            {m.gallery && (
+            {m.gallery && m.gallery.length > 0 && (
               <div className="grid grid-cols-2 gap-4">
-                {m.gallery.map((g) => <Photo key={g.src} src={g.src} alt={g.alt} ratio="4/3" sizes="(min-width:1024px) 25vw, 50vw" />)}
+                {m.gallery.map((g, i) => <Photo key={`${i}-${g.src}`} src={g.src} alt={g.alt} ratio="4/3" sizes="(min-width:1024px) 25vw, 50vw" />)}
               </div>
             )}
           </div>
@@ -80,9 +85,9 @@ export default async function MinistryPage({ params }: Props) {
       </Section>
 
       {linked.length > 0 && (
-        <Section tone="surface">
-          <h2 className="mb-8 text-2xl font-semibold sm:text-3xl">Meeting times</h2>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Section>
+          <SectionHeading eyebrow="Meeting times" title="When we meet" />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {linked.map((s) => <ServiceCard key={s.id} s={s} />)}
           </div>
         </Section>
@@ -90,16 +95,16 @@ export default async function MinistryPage({ params }: Props) {
 
       {related.length > 0 && (
         <Section>
-          <h2 className="mb-8 text-2xl font-semibold sm:text-3xl">Upcoming {m.name} events</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <SectionHeading eyebrow="Events" title={`Upcoming ${m.name} events`} action={<Link href={`/events?ministry=${m.slug}`} className="btn-outline">All {m.name} events</Link>} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((e) => <EventCard key={e.id} event={e} />)}
           </div>
         </Section>
       )}
 
       {others.length > 0 && (
-        <Section tone={linked.length ? "white" : "surface"}>
-          <h2 className="mb-6 text-2xl font-semibold">More {m.group.toLowerCase()}</h2>
+        <Section>
+          <p className="eyebrow mb-5">More {m.group.toLowerCase()}</p>
           <ul className="flex flex-wrap gap-3">
             {others.map((o) => (
               <li key={o.slug}><Link href={`/ministries/${o.slug}`} className="btn-outline">{o.name}</Link></li>

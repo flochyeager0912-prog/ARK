@@ -123,6 +123,8 @@ const eventSchema = z
     if (v.endsAt && v.endsAt <= v.startsAt) ctx.addIssue({ code: "custom", path: ["endsAt"], message: "End must be after start" });
     if (v.registrationClosesAt && v.registrationClosesAt > v.startsAt)
       ctx.addIssue({ code: "custom", path: ["registrationClosesAt"], message: "Registration must close before the event starts" });
+    if (v.capacity != null && v.maxSeatsPerBooking > v.capacity)
+      ctx.addIssue({ code: "custom", path: ["maxSeatsPerBooking"], message: `Can't be more than the capacity (${v.capacity})` });
   });
 
 export async function saveEventAction(id: string | null, _prev: FormState, fd: FormData): Promise<FormState> {
@@ -133,6 +135,9 @@ export async function saveEventAction(id: string | null, _prev: FormState, fd: F
   if (!parsed.success) return { ok: false, message: "Please fix the highlighted fields.", errors: fieldErrors(parsed.error), values };
 
   const { notifyCancellation, slug: rawSlug, ...data } = parsed.data;
+  // New events must be in the future (a minute of grace for the time spent filling in the form).
+  if (!id && data.startsAt.getTime() < Date.now() - 60_000)
+    return { ok: false, message: "Please fix the highlighted fields.", errors: { startsAt: "A new event must start in the future" }, values };
   const slug = slugify(rawSlug || data.title);
   if (!slug) return { ok: false, errors: { slug: "Slug is required" }, values };
 
@@ -372,15 +377,20 @@ export async function deleteServiceAction(id: string) {
 // Announcements
 // ---------------------------------------------------------------------------
 
-const announcementSchema = z.object({
-  title: z.string().trim().min(3).max(140),
-  body: optionalText(400),
-  linkUrl: optionalText(500).refine((v) => !v || safeHref(v) !== null, "Use a /path or an https:// link"),
-  linkLabel: optionalText(40),
-  startsAt: optionalIstDate,
-  endsAt: optionalIstDate,
-  active: checkbox,
-});
+const announcementSchema = z
+  .object({
+    title: z.string().trim().min(3, "Title is required (3+ characters)").max(140),
+    body: optionalText(400),
+    linkUrl: optionalText(500).refine((v) => !v || safeHref(v) !== null, "Use a /path or an https:// link"),
+    linkLabel: optionalText(40),
+    startsAt: optionalIstDate,
+    endsAt: optionalIstDate,
+    active: checkbox,
+  })
+  .superRefine((v, ctx) => {
+    if (v.startsAt && v.endsAt && v.endsAt <= v.startsAt)
+      ctx.addIssue({ code: "custom", path: ["endsAt"], message: "“Hide after” must be later than “Show from”" });
+  });
 
 export async function saveAnnouncementAction(id: string | null, _prev: FormState, fd: FormData): Promise<FormState> {
   const admin = await requireAdmin();
@@ -389,6 +399,9 @@ export async function saveAnnouncementAction(id: string | null, _prev: FormState
   const parsed = announcementSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, message: "Please fix the highlighted fields.", errors: fieldErrors(parsed.error), values };
   const data = { ...parsed.data, startsAt: parsed.data.startsAt ?? new Date() };
+  // An active announcement that has already expired would silently never appear.
+  if (!id && data.active && data.endsAt && data.endsAt.getTime() <= Date.now())
+    return { ok: false, message: "Please fix the highlighted fields.", errors: { endsAt: "This time has already passed — the announcement would never show" }, values };
   if (id) await db.announcement.update({ where: { id }, data });
   else await db.announcement.create({ data });
   await audit(admin.id, id ? "announcement.update" : "announcement.create", "announcement", id, { title: data.title });

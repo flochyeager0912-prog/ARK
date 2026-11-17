@@ -11,7 +11,7 @@ export function VolunteerForm() {
 
   if (state.ok) {
     return (
-      <div className="rounded-2xl bg-emerald-50 p-6 text-emerald-900" role="status">
+      <div className="tone-ok rounded-2xl p-6" role="status">
         <h3 className="text-xl font-semibold">Thank you for offering to serve! 🙌</h3>
         <p className="mt-2">{state.message}</p>
       </div>
@@ -33,7 +33,7 @@ export function VolunteerForm() {
       </div>
       <TextArea name="experience" label="Skills or previous experience" rows={3} maxLength={2000} state={state} />
       <TextArea name="message" label="Anything else you'd like us to know?" rows={3} maxLength={2000} state={state} />
-      <p className="rounded-xl bg-surface px-4 py-3 text-sm text-muted">
+      <p className="rounded-xl border border-line bg-surface px-4 py-3 text-sm text-muted">
         Volunteers serving with children and youth may be asked for a reference and a short conversation with a ministry leader.
       </p>
       <ConsentCheckbox state={state}>

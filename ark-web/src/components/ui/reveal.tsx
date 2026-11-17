@@ -1,79 +1,46 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 /**
- * Progressive scroll-reveal for elements marked [data-reveal].
+ * Scroll reveal: content below the fold fades and lifts in as it enters the viewport.
  *
  * Safety rules (content must never get stuck invisible):
- *  - CSS only hides elements that this script has explicitly marked `.reveal-pending`.
- *  - A MutationObserver picks up sections added later (client-side navigation, streaming).
- *  - Anything already on screen, or when IntersectionObserver / motion is unavailable, is shown at once.
- *  - A failsafe timer reveals every pending element after 2.5s regardless.
+ *  - Each element manages only itself, and only after it has hydrated (effects run post-hydration),
+ *    so server and client HTML always match.
+ *  - CSS only hides elements explicitly marked `data-reveal-state="pending"` by this component.
+ *  - Already on screen, reduced motion, or no IntersectionObserver → never hidden.
  */
-export function RevealObserver() {
+export function Reveal({ children, className, as: Tag = "div" }: { children: ReactNode; className?: string; as?: "div" | "li" }) {
+  const ref = useRef<HTMLDivElement & HTMLLIElement>(null);
+
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || !("IntersectionObserver" in window)) return;
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.95) return;
 
-    const show = (el: Element) => {
-      el.classList.add("is-revealed");
-      el.classList.remove("reveal-pending");
-    };
-
+    el.setAttribute("data-reveal-state", "pending");
+    const show = () => el.setAttribute("data-reveal-state", "shown");
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            show(e.target);
-            io.unobserve(e.target);
-          }
+        if (entries.some((e) => e.isIntersecting)) {
+          show();
+          io.disconnect();
         }
       },
       { rootMargin: "0px 0px -6% 0px", threshold: 0.05 },
     );
-
-    const register = (root: ParentNode) => {
-      const els = root.querySelectorAll<HTMLElement>("[data-reveal]:not(.is-revealed):not(.reveal-pending)");
-      els.forEach((el) => {
-        // Already visible on screen → show immediately, no animation flash.
-        if (el.getBoundingClientRect().top < window.innerHeight * 0.95) {
-          show(el);
-          return;
-        }
-        el.classList.add("reveal-pending");
-        io.observe(el);
-      });
-    };
-
-    register(document);
-
-    const mo = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        m.addedNodes.forEach((n) => {
-          if (n instanceof HTMLElement) {
-            if (n.matches("[data-reveal]")) register(n.parentElement ?? document);
-            else register(n);
-          }
-        });
-      }
-    });
-    mo.observe(document.body, { childList: true, subtree: true });
-
-    // Failsafe: never leave anything hidden.
-    const failsafe = window.setInterval(() => {
-      document.querySelectorAll(".reveal-pending").forEach((el) => {
-        const top = el.getBoundingClientRect().top;
-        if (top < window.innerHeight) show(el);
-      });
-    }, 1500);
-
+    io.observe(el);
     return () => {
       io.disconnect();
-      mo.disconnect();
-      window.clearInterval(failsafe);
-      document.querySelectorAll(".reveal-pending").forEach(show);
+      show();
     };
   }, []);
-  return null;
+
+  return (
+    <Tag ref={ref} className={className}>
+      {children}
+    </Tag>
+  );
 }

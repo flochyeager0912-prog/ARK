@@ -7,7 +7,7 @@ import { getMinistry, getSite } from "@/server/content";
 import { mapsDirectionsUrl } from "@/content/site";
 import { formatDateTime, formatEventWhen, formatTime, relativeDay } from "@/lib/time";
 import { googleCalendarUrl } from "@/lib/ics";
-import { Section } from "@/components/ui/section";
+import { Breadcrumbs, Meta, Section, SectionHeading } from "@/components/ui/section";
 import { AvailabilityBadge, EventCard } from "@/components/site/event-card";
 import { IconArrowRight, IconCalendar, IconCheck, IconPin, IconUsers, IconWhatsApp } from "@/components/ui/icons";
 import { jsonLdString } from "@/components/site/json-ld";
@@ -79,77 +79,75 @@ export default async function EventPage({ params }: Props) {
 
   return (
     <>
-      <section className="hero-bg relative overflow-hidden text-white">
-        {event.imageUrl && (
-          <>
-            <Image src={event.imageUrl} alt="" fill priority sizes="100vw" className="scale-105 object-cover opacity-35 blur-[2px]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/70 to-navy-950/30" />
-          </>
-        )}
-        <div className="container-page relative pb-14 pt-32 sm:pb-16 sm:pt-40">
-          <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-sm text-white/60">
-            <Link href="/events" className="hover:text-white">Events</Link>
-            {ministry && <><span aria-hidden>/</span><Link href={`/ministries/${ministry.slug}`} className="hover:text-white">{ministry.name}</Link></>}
-          </nav>
-          <div className="stagger">
+      <section className="container-page pb-5 pt-24 sm:pb-7 sm:pt-32">
+        <div className="panel overflow-hidden">
+          {event.imageUrl && (
+            <>
+              <Image src={event.imageUrl} alt="" fill priority sizes="100vw" className="scale-105 object-cover opacity-25 blur-[2px]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-night-950/95 via-night-950/80 to-night-950/40" />
+            </>
+          )}
+          <div className="stagger relative p-7 sm:p-10 lg:p-12">
+            <Breadcrumbs items={[{ href: "/events", label: "Events" }, ...(ministry ? [{ href: `/ministries/${ministry.slug}`, label: ministry.name }] : [])]} />
             <div className="mb-5 flex flex-wrap gap-2">
               <AvailabilityBadge availability={availability} />
               {soon && <span className="badge border border-white/20 bg-white/10 px-3 py-1 text-white backdrop-blur">{soon}</span>}
             </div>
-            <h1 className="max-w-4xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">{event.title}</h1>
-            <p className="mt-4 max-w-2xl text-lg text-white/80">{event.summary}</p>
-            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm text-white/85">
-              <p className="flex items-center gap-2"><IconCalendar size={18} className="text-brand-300" />{formatEventWhen(event.startsAt, event.endsAt)}</p>
-              <p className="flex items-center gap-2"><IconPin size={18} className="text-brand-300" />{event.venue}</p>
+            <h1 className="max-w-4xl font-display text-[2.4rem] font-medium leading-[1.05] text-white sm:text-6xl">{event.title}</h1>
+            <p className="lead mt-5 max-w-2xl">{event.summary}</p>
+            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink/85">
+              <p className="flex items-center gap-2"><IconCalendar size={18} className="text-glow-blue" />{formatEventWhen(event.startsAt, event.endsAt)}</p>
+              <p className="flex items-center gap-2"><IconPin size={18} className="text-glow-blue" />{event.venue}</p>
             </div>
+            {canRegister && (
+              <Link href={`/events/${event.slug}/register`} className="btn-primary mt-8 hidden px-6 lg:inline-flex">
+                {registerLabel} <IconArrowRight size={16} />
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
       <Section>
-        <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
+        <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr]">
           <div>
             {event.imageUrl && (
-              <div className="relative mb-10 aspect-[16/9] overflow-hidden rounded-3xl shadow-lift">
+              <div className="relative mb-10 aspect-[16/9] overflow-hidden rounded-2xl border border-line">
                 <Image src={event.imageUrl} alt={event.title} fill sizes="(min-width:1024px) 60vw, 100vw" className="object-cover" />
               </div>
             )}
-            <h2 className="text-2xl font-semibold">About this event</h2>
+            <p className="eyebrow mb-4">Details</p>
+            <h2 className="font-display text-3xl font-medium text-white">About this event</h2>
             <div className="prose-ark mt-4 whitespace-pre-line text-[17px]">
               <p>{event.description}</p>
             </div>
           </div>
 
           <aside className="lg:sticky lg:top-28 lg:self-start">
-            <div className="card overflow-hidden">
-              <div className="space-y-4 p-6">
+            <div className="tile overflow-hidden">
+              <div className="space-y-5 p-6">
                 <div className="flex gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><IconCalendar size={20} /></span>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted">When</p>
-                    <p className="font-medium">{formatEventWhen(event.startsAt, event.endsAt)}</p>
-                  </div>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-glow-blue"><IconCalendar size={18} /></span>
+                  <Meta label="When">{formatEventWhen(event.startsAt, event.endsAt)}</Meta>
                 </div>
                 <div className="flex gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><IconPin size={20} /></span>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted">Where</p>
-                    <p className="font-medium">{event.venue}</p>
-                    {live && <a href={mapsDirectionsUrl(site)} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-brand-600 hover:underline">Get directions</a>}
-                  </div>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-glow-blue"><IconPin size={18} /></span>
+                  <Meta label="Where">
+                    {event.venue}
+                    {live && <a href={mapsDirectionsUrl(site)} target="_blank" rel="noopener noreferrer" className="block text-sm font-medium text-accent hover:underline">Get directions</a>}
+                  </Meta>
                 </div>
                 <div className="flex gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">{canRegister || availability === "dropin" ? <IconCheck size={20} /> : <IconUsers size={20} />}</span>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted">Registration</p>
-                    <p className="font-medium">{STATUS_TEXT[availability]}</p>
-                    {event.registrationClosesAt && canRegister && <p className="text-sm text-muted">Closes {formatDateTime(event.registrationClosesAt)}</p>}
-                  </div>
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-glow-blue">{canRegister || availability === "dropin" ? <IconCheck size={18} /> : <IconUsers size={18} />}</span>
+                  <Meta label="Registration">
+                    {STATUS_TEXT[availability]}
+                    {event.registrationClosesAt && canRegister && <span className="block text-sm font-normal text-muted">Closes {formatDateTime(event.registrationClosesAt)}</span>}
+                  </Meta>
                 </div>
               </div>
 
               {canRegister && (
-                <div className="border-t border-line bg-surface/60 p-6">
+                <div className="border-t border-line bg-white/[0.02] p-6">
                   <Link href={`/events/${event.slug}/register`} className="btn-primary w-full py-3.5 text-base">
                     {registerLabel} <IconArrowRight size={18} />
                   </Link>
@@ -162,7 +160,7 @@ export default async function EventPage({ params }: Props) {
                   <a href={`/api/events/${event.slug}/ics`} className="btn-outline px-4 py-2 text-xs">Add to calendar</a>
                   <a href={gcal} target="_blank" rel="noopener noreferrer" className="btn-outline px-4 py-2 text-xs">Google Calendar</a>
                   <a href={`https://wa.me/?text=${shareText}`} target="_blank" rel="noopener noreferrer" className="btn-outline px-4 py-2 text-xs">
-                    <IconWhatsApp size={14} className="text-emerald-600" /> Share
+                    <IconWhatsApp size={14} className="text-emerald-400" /> Share
                   </a>
                 </div>
               )}
@@ -172,12 +170,9 @@ export default async function EventPage({ params }: Props) {
       </Section>
 
       {more.length > 0 && (
-        <Section tone="surface">
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <h2 className="text-2xl font-semibold">More upcoming events</h2>
-            <Link href="/events" className="text-sm font-semibold text-brand-600 hover:underline">All events →</Link>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Section>
+          <SectionHeading eyebrow="What else is on" title="More upcoming events" action={<Link href="/events" className="btn-outline">All events</Link>} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {more.map((e) => <EventCard key={e.id} event={e} />)}
           </div>
         </Section>
@@ -185,10 +180,10 @@ export default async function EventPage({ params }: Props) {
 
       {/* Phones: the primary action stays within thumb reach, above the tab bar. */}
       {canRegister && (
-        <div data-action-bar className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgb(11_20_48/0.25)] backdrop-blur-xl animate-toast-in lg:hidden">
+        <div data-action-bar className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 border-t border-white/[0.08] bg-night-950/90 px-4 py-3 backdrop-blur-xl animate-toast-in lg:hidden">
           <div className="mx-auto flex max-w-lg items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{event.title}</p>
+              <p className="truncate text-sm font-semibold text-white">{event.title}</p>
               <p className="truncate text-xs text-muted">{soon ? `${soon} · ` : ""}{formatTime(event.startsAt)}</p>
             </div>
             <Link href={`/events/${event.slug}/register`} className="btn-primary shrink-0 px-5 py-2.5">{registerLabel}</Link>

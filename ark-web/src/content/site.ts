@@ -56,61 +56,47 @@ export const mapsDirectionsUrl = (s: SiteContent) =>
 
 export type NavItem = { label: string; href: string; children?: NavItem[] };
 
-export const mainNav: NavItem[] = [
-  { label: "Home", href: "/" },
+/**
+ * Header navigation. The home page is a single scrolling story; each entry is one of its sections
+ * (`id`), and `match` lists the detail pages that belong to it so the header stays highlighted there.
+ */
+export const sectionNav = [
+  { id: "about", label: "About", href: "/#about", match: ["/about", "/gallery"] },
+  { id: "services", label: "Services", href: "/#services", match: ["/services", "/watch"] },
+  { id: "ministries", label: "Ministries", href: "/#ministries", match: ["/ministries"] },
+  { id: "events", label: "Events", href: "/#events", match: ["/events", "/booking"] },
+  { id: "involved", label: "Get involved", href: "/#involved", match: ["/get-involved", "/give"] },
+  { id: "contact", label: "Contact", href: "/#contact", match: ["/contact", "/privacy"] },
+] as const;
+
+/** Every page on the site, grouped — used by the footer and the mobile menu. */
+export const footerNav: { title: string; links: NavItem[] }[] = [
   {
-    label: "About",
-    href: "/about",
-    children: [
+    title: "Our church",
+    links: [
       { label: "About us", href: "/about" },
       { label: "Our mission", href: "/about/mission" },
       { label: "Our journey", href: "/about/journey" },
       { label: "Gallery", href: "/gallery" },
+      { label: "Different ministries", href: "/ministries" },
     ],
   },
   {
-    label: "Services",
-    href: "/services",
-    children: [
+    title: "Gather",
+    links: [
       { label: "Sunday services", href: "/services" },
       { label: "Other services", href: "/services/special" },
       { label: "Live worship", href: "/watch" },
+      { label: "Events", href: "/events" },
     ],
   },
-  { label: "Ministries", href: "/ministries" },
-  { label: "Events", href: "/events" },
   {
-    label: "Get involved",
-    href: "/get-involved",
-    children: [
+    title: "Get involved",
+    links: [
       { label: "Reach out in faith", href: "/get-involved" },
       { label: "Volunteer with us", href: "/get-involved/volunteer" },
       { label: "Givings", href: "/give" },
-    ],
-  },
-  { label: "Contact", href: "/contact" },
-];
-
-export const footerNav: { title: string; links: NavItem[] }[] = [
-  {
-    title: "Useful links",
-    links: [
-      { label: "About us", href: "/about" },
-      { label: "Gallery", href: "/gallery" },
-      { label: "Our journey", href: "/about/journey" },
-      { label: "Services", href: "/services" },
-      { label: "Events", href: "/events" },
       { label: "Contact us", href: "/contact" },
-    ],
-  },
-  {
-    title: "Community",
-    links: [
-      { label: "Reach out in faith", href: "/get-involved" },
-      { label: "Other services", href: "/services/special" },
-      { label: "Different ministries", href: "/ministries" },
-      { label: "Volunteer with us", href: "/get-involved/volunteer" },
-      { label: "Donate", href: "/give" },
     ],
   },
 ];

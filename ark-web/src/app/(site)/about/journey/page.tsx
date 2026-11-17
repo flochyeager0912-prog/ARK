@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PageHero, Section } from "@/components/ui/section";
 import { getSection } from "@/server/content";
+import { Reveal } from "@/components/ui/reveal";
 
 export const metadata: Metadata = {
   title: "Our journey",
@@ -14,47 +15,46 @@ export default async function JourneyPage() {
   const { intro: journeyIntro, milestones: journey } = await getSection("journey");
   return (
     <>
-      <PageHero eyebrow="Our journey" title={journeyIntro.title}>
-        <Link href="/services" className="btn-light">Join this Sunday</Link>
+      <PageHero eyebrow="Our journey" title={journeyIntro.title} crumbs={[{ href: "/about", label: "About" }, { href: "/about/journey", label: "Our journey" }]}>
+        <Link href="/services" className="btn-primary">Join this Sunday</Link>
       </PageHero>
 
       <Section>
-        <div className="grid gap-12 lg:grid-cols-2">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
           <figure>
-            <blockquote className="font-display text-2xl leading-snug text-navy-800 sm:text-3xl">“{journeyIntro.verse.text}”</blockquote>
-            <figcaption className="mt-3 font-semibold text-brand-600">— {journeyIntro.verse.reference}</figcaption>
+            <blockquote className="font-display text-3xl italic leading-snug text-white sm:text-4xl">“{journeyIntro.verse.text}”</blockquote>
+            <figcaption className="mt-4 font-mono text-sm text-accent">— {journeyIntro.verse.reference}</figcaption>
           </figure>
           <div className="prose-ark">
-            {journeyIntro.body.map((p) => (
-              <p key={p.slice(0, 24)}>{p}</p>
-            ))}
+            {journeyIntro.body.map((p, i) => <p key={i}>{p}</p>)}
           </div>
         </div>
       </Section>
 
-      <Section tone="surface">
-        <h2 className="mb-12 text-3xl font-semibold sm:text-4xl">The Ark Victory journey</h2>
-        <ol className="relative space-y-12 border-l-2 border-brand-200 pl-8 sm:pl-12">
-          {journey.map((m) => (
-            <li key={m.year} className="relative">
-              <span className="absolute -left-[41px] top-1 h-4 w-4 rounded-full border-4 border-white bg-brand-600 ring-2 ring-brand-200 sm:-left-[57px]" aria-hidden />
-              <div className="grid gap-6 md:grid-cols-[1fr_280px] md:items-start">
+      <Section>
+        <p className="eyebrow mb-4">Timeline</p>
+        <h2 className="section-title mb-12">The Ark Victory journey</h2>
+        <ol className="relative space-y-6 before:absolute before:bottom-2 before:left-[7px] before:top-2 before:w-px before:bg-gradient-to-b before:from-glow-blue/60 before:via-glow-blue/20 before:to-glow-gold/50 sm:space-y-8">
+          {journey.map((m, i) => (
+            <Reveal as="li" key={`${i}-${m.year}`} className="relative pl-10">
+              <span className="absolute left-0 top-6 h-[15px] w-[15px] rounded-full border border-glow-blue/60 bg-night-950 shadow-[0_0_14px_rgb(157_177_255/0.6)]" aria-hidden>
+                <span className="absolute inset-[4px] rounded-full bg-glow-blue" />
+              </span>
+              <article className="tile grid gap-6 p-6 md:grid-cols-[1fr_280px] md:items-start">
                 <div>
-                  <p className="font-display text-2xl font-semibold text-brand-600">{m.year}</p>
-                  <h3 className="mt-1 text-xl font-semibold">{m.title}</h3>
+                  <p className="font-mono text-sm text-glow-gold">{m.year}</p>
+                  <h3 className="mt-1 text-xl text-white">{m.title}</h3>
                   <div className="prose-ark mt-3">
-                    {m.body.map((p) => (
-                      <p key={p.slice(0, 24)}>{p}</p>
-                    ))}
+                    {m.body.map((p, i) => <p key={i}>{p}</p>)}
                   </div>
                 </div>
                 {m.image && (
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-brand-50">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-white/5">
                     <Image src={m.image.src} alt={m.image.alt} fill sizes="(min-width:768px) 280px, 100vw" className="object-cover" />
                   </div>
                 )}
-              </div>
-            </li>
+              </article>
+            </Reveal>
           ))}
         </ol>
       </Section>

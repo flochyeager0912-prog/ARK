@@ -22,76 +22,90 @@ export default async function ContactPage({ searchParams }: Props) {
   const { purpose, ministry } = await searchParams;
   const m = ministry ? await getMinistry(ministry) : undefined;
 
+  const channels = [
+    { label: "Call us", Icon: IconPhone, body: <a href={`tel:${site.contact.phoneE164}`} className="font-semibold text-white hover:text-accent">{site.contact.phoneDisplay}</a> },
+    {
+      label: "WhatsApp",
+      Icon: IconWhatsApp,
+      body: <a href={`https://wa.me/${site.contact.whatsappE164}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:text-accent">Message us on WhatsApp</a>,
+    },
+    {
+      label: "Email",
+      Icon: IconMail,
+      body: (
+        <>
+          <a href={`mailto:${site.contact.email}`} className="block break-all font-semibold text-white hover:text-accent">{site.contact.email}</a>
+          {site.contact.secondaryEmail && <a href={`mailto:${site.contact.secondaryEmail}`} className="block break-all text-sm text-muted hover:text-white">{site.contact.secondaryEmail}</a>}
+        </>
+      ),
+    },
+    {
+      label: "Visit us",
+      Icon: IconPin,
+      body: (
+        <>
+          <address className="font-semibold not-italic text-white">{site.address.full}</address>
+          <a href={mapsDirectionsUrl(site)} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent hover:underline">Get directions →</a>
+        </>
+      ),
+    },
+  ];
+
   return (
     <>
-      <PageHero eyebrow={contactPage.newToArk.eyebrow} title={contactPage.newToArk.title} lead={contactPage.newToArk.body} />
+      <PageHero eyebrow={contactPage.newToArk.eyebrow} title={contactPage.newToArk.title} lead={contactPage.newToArk.body} crumbs={[{ href: "/contact", label: "Contact" }]}>
+        <a href="#form" className="btn-primary">Send us a message</a>
+        <a href={mapsDirectionsUrl(site)} target="_blank" rel="noopener noreferrer" className="btn-outline">Get directions</a>
+      </PageHero>
 
-      <Section>
-        <div className="grid gap-5 md:grid-cols-3">
-          {contactPage.pillars.map((p) => (
-            <Link key={p.title} href={p.href} className="card card-hover group p-6 hover:border-brand-300">
-              <h2 className="text-lg font-semibold group-hover:text-brand-600">{p.title}</h2>
+      <Section plain>
+        <div className="grid gap-3 md:grid-cols-3">
+          {contactPage.pillars.map((p, i) => (
+            <Link key={`${i}-${p.title}`} href={p.href} className="panel group block p-6 transition-colors hover:border-white/20">
+              <h2 className="text-lg font-semibold text-white group-hover:text-accent">{p.title}</h2>
               <p className="mt-2 text-sm text-muted">{p.body}</p>
             </Link>
           ))}
         </div>
       </Section>
 
-      <Section tone="surface" id="form">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
-          <div className="space-y-6">
+      <Section id="form">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-14">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-3xl font-semibold">Contact us</h2>
-              <p className="mt-3 text-muted">{contactPage.formIntro}</p>
+              <p className="eyebrow mb-4">Contact</p>
+              <h2 className="section-title">Contact us</h2>
+              <p className="mt-4 text-muted">{contactPage.formIntro}</p>
             </div>
-            <ul className="space-y-4">
-              <li className="flex gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700"><IconPhone /></span>
-                <div>
-                  <p className="text-sm text-muted">Call us</p>
-                  <a href={`tel:${site.contact.phoneE164}`} className="font-semibold hover:text-brand-600">{site.contact.phoneDisplay}</a>
-                </div>
-              </li>
-              <li className="flex gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><IconWhatsApp /></span>
-                <div>
-                  <p className="text-sm text-muted">WhatsApp</p>
-                  <a href={`https://wa.me/${site.contact.whatsappE164}`} target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-brand-600">Message us on WhatsApp</a>
-                </div>
-              </li>
-              <li className="flex gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700"><IconMail /></span>
-                <div className="min-w-0">
-                  <p className="text-sm text-muted">Email</p>
-                  <a href={`mailto:${site.contact.email}`} className="block break-all font-semibold hover:text-brand-600">{site.contact.email}</a>
-                  <a href={`mailto:${site.contact.secondaryEmail}`} className="block break-all text-sm text-muted hover:text-brand-600">{site.contact.secondaryEmail}</a>
-                </div>
-              </li>
-              <li className="flex gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700"><IconPin /></span>
-                <div>
-                  <p className="text-sm text-muted">Visit us</p>
-                  <address className="font-semibold not-italic">{site.address.full}</address>
-                  <a href={mapsDirectionsUrl(site)} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-brand-600 hover:underline">Get directions →</a>
-                </div>
-              </li>
+            <ul className="space-y-3">
+              {channels.map(({ label, Icon, body }) => (
+                <li key={label} className="tile flex gap-4 p-4">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line text-glow-blue"><Icon size={18} /></span>
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">{label}</p>
+                    <div className="mt-1">{body}</div>
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
-          <div className="card p-6 sm:p-8">
+          <div className="tile p-6 sm:p-8">
             <ContactForm defaultPurpose={purpose} ministry={m?.slug} ministryName={m?.name} />
           </div>
         </div>
       </Section>
 
-      <section aria-label="Map" className="h-[420px] w-full bg-surface">
-        <iframe
-          title={`Map to ${site.name}`}
-          src={mapsEmbedUrl(site)}
-          className="h-full w-full border-0"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-      </section>
+      <Section panelClassName="overflow-hidden p-0 sm:p-0 lg:p-0">
+        <div className="h-[420px] w-full">
+          <iframe
+            title={`Map to ${site.name}`}
+            src={mapsEmbedUrl(site)}
+            className="h-full w-full border-0 opacity-90 [filter:invert(0.9)_hue-rotate(180deg)_saturate(0.6)]"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+      </Section>
     </>
   );
 }
