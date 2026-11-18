@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withBase } from "@/lib/preview";
 import Image from "next/image";
 import { RetryButton } from "@/components/pwa/retry-button";
 import { getSite } from "@/server/content";
@@ -18,8 +19,8 @@ export default async function OfflinePage() {
           This page hasn&apos;t been saved on your device yet. Pages you&apos;ve visited before — like service times — still work offline.
         </p>
         <div className="mt-8 grid grid-cols-2 gap-3 text-sm">
-          <a href="/services" className="btn-ghost-light">Service times</a>
-          <a href="/contact" className="btn-ghost-light">Contact &amp; map</a>
+          <a href={withBase("/services")} className="btn-ghost-light">Service times</a>
+          <a href={withBase("/contact")} className="btn-ghost-light">Contact &amp; map</a>
         </div>
         <p className="mt-6 text-sm text-white/70">
           {site.address.full}

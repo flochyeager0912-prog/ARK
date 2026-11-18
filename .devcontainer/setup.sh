@@ -33,6 +33,15 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-npm run db:seed -- --demo
+# Review data: a snapshot of the development database (.devcontainer/demo-data.sql) when present,
+# otherwise generated sample content. Either way, the seed then adds the demo admin from .env.
+DEMO_DATA="../.devcontainer/demo-data.sql"
+if [ -f "$DEMO_DATA" ] && [ "$(node -e "const{PrismaClient}=require('@prisma/client');const d=new PrismaClient();d.event.count().then(n=>{console.log(n);return d.\$disconnect()})")" = "0" ]; then
+  npx prisma db execute --file "$DEMO_DATA" --schema prisma/schema.prisma
+  echo "Loaded review data from $DEMO_DATA"
+  npm run db:seed
+else
+  npm run db:seed -- --demo
+fi
 npm run build
 echo "Setup complete."

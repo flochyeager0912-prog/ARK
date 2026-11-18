@@ -11,3 +11,7 @@ backups/
 .DS_Store
 e2e-output/
 .next-test/
+
+# Static review preview (scripts/static-preview.mjs)
+.next-preview/
+preview-out/

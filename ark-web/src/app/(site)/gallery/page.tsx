@@ -1,3 +1,4 @@
+import { withBase } from "@/lib/preview";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHero, Section } from "@/components/ui/section";
@@ -24,7 +25,7 @@ export default async function GalleryPage() {
           <ul className="columns-1 gap-3 sm:columns-2 lg:columns-3 [&>li]:mb-3">
             {gallery.map((g, i) => (
               <li key={`${i}-${g.src}`} className="group break-inside-avoid overflow-hidden rounded-xl border border-line bg-white/5">
-                <a href={g.src} target="_blank" rel="noopener" className="block">
+                <a href={withBase(g.src)} target="_blank" rel="noopener" className="block">
                   <Image
                     src={g.src}
                     alt={g.alt}

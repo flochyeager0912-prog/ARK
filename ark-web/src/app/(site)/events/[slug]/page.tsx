@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withBase } from "@/lib/preview";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -157,7 +158,7 @@ export default async function EventPage({ params }: Props) {
 
               {live && (
                 <div className="flex flex-wrap gap-2 border-t border-line p-6">
-                  <a href={`/api/events/${event.slug}/ics`} className="btn-outline px-4 py-2 text-xs">Add to calendar</a>
+                  <a href={withBase(`/api/events/${event.slug}/ics`)} className="btn-outline px-4 py-2 text-xs">Add to calendar</a>
                   <a href={gcal} target="_blank" rel="noopener noreferrer" className="btn-outline px-4 py-2 text-xs">Google Calendar</a>
                   <a href={`https://wa.me/?text=${shareText}`} target="_blank" rel="noopener noreferrer" className="btn-outline px-4 py-2 text-xs">
                     <IconWhatsApp size={14} className="text-emerald-400" /> Share

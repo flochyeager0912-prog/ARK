@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isStaticPreview } from "@/lib/preview";
 import { InstallButton } from "@/components/pwa/install-button";
 import { IconFacebook, IconInstagram, IconMail, IconPhone, IconPin, IconYouTube } from "@/components/ui/icons";
 import { footerNav } from "@/content/site";
@@ -66,7 +67,7 @@ export async function SiteFooter() {
           <p>© {year} {site.name}. A member of {site.denomination}.</p>
           <div className="flex flex-wrap gap-5">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
-            <Link href="/admin" className="hover:text-white">Staff login</Link>
+            {isStaticPreview ? <span>Review preview</span> : <Link href="/admin" className="hover:text-white">Staff login</Link>}
             <BackToTop />
           </div>
         </div>

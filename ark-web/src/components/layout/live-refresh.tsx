@@ -1,5 +1,6 @@
 "use client";
 
+import { isStaticPreview } from "@/lib/preview";
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -20,7 +21,7 @@ export function LiveRefresh() {
   const last = useRef(0);
 
   useEffect(() => {
-    if (!LIVE.test(pathname)) return;
+    if (isStaticPreview || !LIVE.test(pathname)) return;
     last.current = Date.now();
     const refresh = () => {
       if (document.visibilityState !== "visible" || !navigator.onLine) return;

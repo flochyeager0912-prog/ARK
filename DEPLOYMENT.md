@@ -415,7 +415,7 @@ internet — fine for a staging copy, risky for the main site.
 
 | GitHub feature | Can it run this app? | Use it for |
 |---|---|---|
-| **GitHub Pages** | ❌ Static files only — no Node.js server, no database, no admin | — |
+| **GitHub Pages** | ⚠️ A **read-only snapshot** of the public pages only — no forms, no admin (static files, no server or database) | **Always-on review link** for clients ([§6.2a](#62a-read-only-review-link-on-github-pages)) |
 | **GitHub Codespaces** | ✅ Runs the **full app + database** in a cloud container on GitHub, with an https link you can share | **Live demos and client reviews** ([§6.2](#62-live-demo-inside-github-codespaces--no-other-account-needed)) |
 | **GitHub + Vercel/Render/Railway** | ✅ GitHub holds the code; the host redeploys on every push | **Permanent client preview link** ([§6.3](#63-a-permanent-client-preview-link-github--vercel)) and production |
 | **GitHub Actions** | Runs tests/builds, can push to a server | **CI** (already set up, [§6.4](#64-continuous-integration-github-actions)) and **auto-deploy to a VM** ([§6.5](#65-github-actions--your-vm-auto-deploy)) |
@@ -429,6 +429,11 @@ internet — fine for a staging copy, risky for the main site.
 
 The repository includes a ready-made setup (`.devcontainer/`): one click builds the website, the admin
 and a PostgreSQL database **with sample events, registrations and inbox items**, all running on GitHub.
+
+The data comes from `.devcontainer/demo-data.sql`, a snapshot of the development database (test
+records only, no admin accounts). To refresh it, export again from a dev database with
+`pg_dump --data-only --inserts` for the content tables, check it holds no real personal details, and
+commit it. Delete the file to fall back to generated sample data (`npm run db:seed -- --demo`).
 
 **Start it (first time ≈ 5–8 minutes):**
 1. Open https://github.com/flochyeager0912-prog/ARK
@@ -462,6 +467,36 @@ logged (no SMTP), and the address changes if you create a new codespace.
 
 **Without GitHub's cloud:** the same `.devcontainer/` works locally in VS Code
 (**Dev Containers: Reopen in Container**) with Docker installed.
+
+---
+
+### 6.2a Read-only review link on GitHub Pages
+
+A free link that is always online, like `https://flochyeager0912-prog.github.io/ARK/`: every public
+page (home, about, services, ministries, events, give, contact…) with the snapshot data from
+`.devcontainer/demo-data.sql`, the 3D background and all navigation. It is a **static copy**, so:
+forms show "Review preview — sending is switched off", event registration can be viewed but not
+submitted, there is no `/admin`, and search engines are told not to index it.
+
+**One-time setup:** repo **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+After that, `.github/workflows/pages.yml` rebuilds the preview on every push to `main`
+(or run it by hand: **Actions → Review preview (GitHub Pages) → Run workflow**). It takes about 3 minutes.
+
+**What it does:** builds the app with `STATIC_PREVIEW=1` (served under `/<repo>`, images unresized,
+no service worker), loads the snapshot into a temporary database, saves every page with
+`ark-web/scripts/static-preview.mjs` — which fails the run if any page, link or image is missing —
+and publishes the result.
+
+**Try it locally first** (from `ark-web/`, with a database in `DATABASE_URL`):
+```bash
+STATIC_PREVIEW=1 PREVIEW_BASE_PATH=/ARK NEXT_DIST_DIR=.next-preview SITE_URL=https://<owner>.github.io/ARK npm run build
+STATIC_PREVIEW=1 NEXT_DIST_DIR=.next-preview npx next start -p 3200 &
+PREVIEW_ORIGIN=http://localhost:3200 PREVIEW_BASE_PATH=/ARK NEXT_DIST_DIR=.next-preview node scripts/static-preview.mjs
+# → ark-web/preview-out/ is the site; serve it under /ARK/ to browse it
+```
+
+**Changing what reviewers see:** edit `.devcontainer/demo-data.sql` (see §6.2) and push. Events keep
+their dates, so they show as "Ended" once those dates pass — refresh the snapshot for long reviews.
 
 ---
 

@@ -17,7 +17,12 @@ const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("
 export function scrollToId(id: string) {
   const el = document.getElementById(id);
   if (!el) return false;
-  if (instance) instance.scrollTo(el, { duration: 1.2 });
+  if (instance) {
+    // Lenis measures the page asynchronously; right after it starts (or after content streams in)
+    // its scroll limit can still be 0, which would clamp the target to the top. Measure first.
+    instance.resize();
+    instance.scrollTo(el, { duration: 1.2 });
+  }
   else el.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
   return true;
 }
@@ -52,7 +57,8 @@ export function SmoothScroll() {
 
   // Arriving from another page at /#section: the target may not exist yet while the loading
   // skeleton streams in, so the router's own hash scroll falls back to the top. Wait (briefly)
-  // for the section to render, then glide to it.
+  // for the section to render — and for Lenis to start, which would otherwise cancel a scroll begun
+  // just before it — then glide to it.
   const pathname = usePathname();
   useEffect(() => {
     const id = decodeURIComponent(window.location.hash.slice(1));
@@ -61,8 +67,12 @@ export function SmoothScroll() {
     let timer = 0;
     const attempt = () => {
       const el = document.getElementById(id);
-      if (el && Math.abs(el.getBoundingClientRect().top) > 160) scrollToId(id);
-      else if (!el && tries++ < 40) timer = window.setTimeout(attempt, 75);
+      // Not laid out yet (still being swapped in by streaming): its position would read 0.
+      const rendered = el !== null && el.getBoundingClientRect().height > 0;
+      const scrollerReady = instance !== null || reducedMotion() || tries > 20;
+      if (rendered && scrollerReady) {
+        if (Math.abs(el.getBoundingClientRect().top) > 160) scrollToId(id);
+      } else if (tries++ < 50) timer = window.setTimeout(attempt, 75);
     };
     timer = window.setTimeout(attempt, 60);
     return () => window.clearTimeout(timer);

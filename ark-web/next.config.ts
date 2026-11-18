@@ -65,16 +65,30 @@ const legacyRedirects: [string, string][] = [
   ["/comments/feed", "/"],
 ];
 
+/**
+ * Static review preview for GitHub Pages (STATIC_PREVIEW=1): served under a sub-path such as /ARK,
+ * with images served as-is (Pages can't resize them). See scripts/static-preview.mjs.
+ */
+const staticPreview = process.env.STATIC_PREVIEW === "1";
+const previewBasePath = staticPreview ? process.env.PREVIEW_BASE_PATH || "/ARK" : "";
+
 const nextConfig: NextConfig = {
   // Separate build folders let a test build run without disturbing a running `npm start`.
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  output: "standalone",
+  output: staticPreview ? undefined : "standalone",
+  ...(staticPreview ? { basePath: previewBasePath } : {}),
+  env: {
+    NEXT_PUBLIC_STATIC_PREVIEW: staticPreview ? "1" : "",
+    NEXT_PUBLIC_BASE_PATH: previewBasePath,
+  },
   poweredByHeader: false,
   reactStrictMode: true,
-  images: {
-    formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60 * 60 * 24 * 30,
-  },
+  images: staticPreview
+    ? { loader: "custom", loaderFile: "./src/lib/image-loader.ts" }
+    : {
+        formats: ["image/avif", "image/webp"],
+        minimumCacheTTL: 60 * 60 * 24 * 30,
+      },
   experimental: {
     serverActions: { bodySizeLimit: "200kb", ...(siteHost ? { allowedOrigins: [siteHost] } : {}) },
   },

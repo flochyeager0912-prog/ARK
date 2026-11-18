@@ -1,5 +1,6 @@
 "use client";
 
+import { isStaticPreview } from "@/lib/preview";
 import Script from "next/script";
 import { useEffect, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
@@ -35,6 +36,18 @@ export function BotProtection() {
 
 export function SubmitButton({ children, pendingText = "Sending…", className }: { children: ReactNode; pendingText?: string; className?: string }) {
   const { pending } = useFormStatus();
+  // Static review preview: there is no server to send to. A disabled submit button also blocks
+  // submitting with the Enter key.
+  if (isStaticPreview) {
+    return (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <button type="submit" disabled aria-disabled className={cn(className?.includes("btn-") ? className : cn("btn-primary", className), "w-full sm:w-auto")}>
+          {children}
+        </button>
+        <p className="text-sm text-muted">Review preview — sending is switched off.</p>
+      </div>
+    );
+  }
   return (
     <button
       type="submit"

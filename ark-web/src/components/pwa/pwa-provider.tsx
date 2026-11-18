@@ -1,5 +1,6 @@
 "use client";
 
+import { isStaticPreview } from "@/lib/preview";
 import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import Image from "next/image";
 import { IconX } from "@/components/ui/icons";
@@ -74,7 +75,8 @@ export function PwaProvider({ children }: { children: ReactNode }) {
 
   // Register the service worker (production only) and watch for updates.
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") return;
+    // Not in the static review preview: it lives under a sub-path and must not cache like an app.
+    if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production" || isStaticPreview) return;
     let reloading = false;
     const onControllerChange = () => {
       if (!updateRequested || reloading) return;

@@ -1,0 +1,76 @@
+# Read-only review preview of the public website on GitHub Pages:
+#   https://<owner>.github.io/<repo>/
+# Builds the app with the snapshot data in .devcontainer/demo-data.sql, saves every public page as a
+# static file (ark-web/scripts/static-preview.mjs) and publishes it. Forms don't send and there is no
+# admin — that needs the full app (DEPLOYMENT.md). One-time setup: Settings → Pages → Source: GitHub Actions.
+name: Review preview (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ark
+          POSTGRES_PASSWORD: ark
+          POSTGRES_DB: ark
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ark" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: ark-web
+    env:
+      DATABASE_URL: postgresql://ark:ark@localhost:5432/ark?schema=public
+      AUTH_SECRET: preview-build-only-not-a-real-secret-0000
+      STATIC_PREVIEW: "1"
+      PREVIEW_BASE_PATH: /${{ github.event.repository.name }}
+      SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+      NEXT_DIST_DIR: .next-preview
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ark-web/package-lock.json
+      - run: npm ci
+      - name: Database with the review data
+        run: |
+          npx prisma migrate deploy
+          npx prisma db execute --file ../.devcontainer/demo-data.sql --schema prisma/schema.prisma
+      - run: npm run build
+      - name: Save every public page as a static file
+        run: |
+          npx next start -p 3200 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf "http://localhost:3200${PREVIEW_BASE_PATH}/api/health" > /dev/null && break; sleep 1; done
+          PREVIEW_ORIGIN=http://localhost:3200 node scripts/static-preview.mjs || { tail -50 /tmp/next.log; exit 1; }
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ark-web/preview-out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

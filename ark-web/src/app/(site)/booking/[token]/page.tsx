@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withBase } from "@/lib/preview";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
@@ -78,7 +79,7 @@ export default async function BookingPage({ params, searchParams }: Props) {
         {upcoming && reg.status !== "CANCELLED" && event.status !== "CANCELLED" && (
           <div className="flex flex-col gap-4 border-t border-line bg-white/[0.02] p-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
-              <a href={`/api/events/${event.slug}/ics`} className="btn-outline px-4 py-2 text-xs">Add to calendar</a>
+              <a href={withBase(`/api/events/${event.slug}/ics`)} className="btn-outline px-4 py-2 text-xs">Add to calendar</a>
               <a
                 href={googleCalendarUrl({ uid: event.id, title: event.title, location: event.venue, start: event.startsAt, end: event.endsAt })}
                 target="_blank"

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { getSite } from "@/server/content";
+import { isStaticPreview } from "@/lib/preview";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -12,6 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const site = await getSite();
   return {
   metadataBase: new URL(baseUrl),
+  // The static review preview must not be indexed (it would compete with the real site).
+  ...(isStaticPreview ? { robots: { index: false, follow: false } } : {}),
   title: { default: `${site.name} · Sembakkam, Chennai`, template: `%s · ${site.name}` },
   description: site.description,
   applicationName: site.name,
