@@ -3,6 +3,19 @@ import type { NextConfig } from "next";
 const isProd = process.env.NODE_ENV === "production";
 const isHttps = (process.env.SITE_URL ?? "").startsWith("https://");
 
+/**
+ * The site's own public host. Some proxies (e.g. GitHub Codespaces, certain load balancers) forward
+ * an internal Host header, which would make Next.js reject form submissions as cross-site; trusting
+ * the configured public address keeps CSRF protection while working behind them.
+ */
+const siteHost = (() => {
+  try {
+    return process.env.SITE_URL ? new URL(process.env.SITE_URL).host : undefined;
+  } catch {
+    return undefined;
+  }
+})();
+
 // Content-Security-Policy. Inline scripts are needed by Next.js hydration;
 // third parties are limited to YouTube, Google Maps and Cloudflare Turnstile.
 const csp = [
@@ -63,7 +76,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   experimental: {
-    serverActions: { bodySizeLimit: "200kb" },
+    serverActions: { bodySizeLimit: "200kb", ...(siteHost ? { allowedOrigins: [siteHost] } : {}) },
   },
   async headers() {
     return [

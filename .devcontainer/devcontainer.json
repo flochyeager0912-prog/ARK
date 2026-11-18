@@ -1,0 +1,21 @@
+// GitHub Codespaces / Dev Containers: runs the whole app (website + admin + PostgreSQL) in the cloud
+// with a shareable https link — for demos and client reviews. See DEPLOYMENT.md §6.
+{
+  "name": "The Ark Victory Church — live demo",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "The Ark website", "onAutoForward": "notify" }
+  },
+  // First creation: install, create the database, add demo content, production build.
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  // Every start (including after the codespace wakes up): serve the built app on port 3000.
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "codespaces": { "openFiles": ["DEPLOYMENT.md"] },
+    "vscode": { "extensions": ["dbaeumer.vscode-eslint", "bradlc.vscode-tailwindcss", "Prisma.prisma"] }
+  }
+}

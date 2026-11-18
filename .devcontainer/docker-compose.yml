@@ -1,0 +1,22 @@
+# Codespaces / Dev Container services: the app container shares the database's network,
+# so the app reaches PostgreSQL on localhost:5432.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/javascript-node:1-20-bookworm
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    network_mode: service:db
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ark
+      POSTGRES_PASSWORD: ark
+      POSTGRES_DB: ark
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

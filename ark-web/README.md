@@ -76,4 +76,4 @@ tests/               unit, integration, e2e
 ```
 
 ## Deploying
-See **`docs/OPERATIONS.md`** for the deployment options, the go-live checklist, backups, data retention and the event-day check-in guide.
+See **`../DEPLOYMENT.md`** for every way to deploy (with step-by-step instructions), and **`docs/OPERATIONS.md`** for the go-live checklist, backups, data retention and the event-day check-in guide.

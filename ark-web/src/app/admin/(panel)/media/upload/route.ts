@@ -2,16 +2,24 @@ import { NextResponse } from "next/server";
 import { getAdmin } from "@/server/auth";
 import { rateLimit } from "@/server/rate-limit";
 import { MAX_UPLOAD_BYTES, storeUpload } from "@/server/media";
+import { siteUrl } from "@/lib/env";
 
 /** Image upload endpoint for the admin (multipart/form-data, field "file"). */
 export async function POST(req: Request) {
   const admin = await getAdmin();
   if (!admin) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
 
-  // CSRF: only accept same-origin requests.
+  // CSRF: only accept requests from this site — the request's own host, or the configured public
+  // address (for proxies that forward an internal Host header, e.g. GitHub Codespaces).
   const origin = req.headers.get("origin");
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
-  if (!origin || !host || new URL(origin).host !== host) {
+  let originHost: string | undefined;
+  try {
+    originHost = origin ? new URL(origin).host : undefined;
+  } catch {
+    originHost = undefined;
+  }
+  if (!originHost || (originHost !== host && originHost !== new URL(siteUrl()).host)) {
     return NextResponse.json({ error: "Bad origin" }, { status: 403 });
   }
   const len = Number(req.headers.get("content-length") ?? 0);
